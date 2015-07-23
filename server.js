@@ -8,7 +8,14 @@ var app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+app.set('view engine', 'jade');
+app.set('views', './views');
+
 app.use('/breve', require('./routes/api'));
+
+app.get('/breve', function(req, res){
+	res.render('home');
+});
 
 //app.get('/', function(req, res){
 //	res.send('working');
