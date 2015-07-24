@@ -12,6 +12,7 @@ app.set('view engine', 'jade');
 app.set('views', './views');
 
 app.use('/breve', require('./routes/api'));
+app.use(express.static(__dirname + '/static')); //go to http://209.135.132.117:3000/main.css
 
 app.get('/breve', function(req, res){
 	res.render('home');

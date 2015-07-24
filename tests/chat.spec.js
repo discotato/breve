@@ -3,7 +3,7 @@ var mongoose = require('mongoose');
 
 mongoose.connect('mongodb://localhost/breve');
 
-var Chat = require('../../models/chat');
+var Chat = require('../models/chat');
 
 var expect = require('chai').expect;
 
@@ -31,7 +31,7 @@ describe('Chat model', function(){
 		});
 	});
 	
-	it(('Should require a message', function(done){
+	it('Should require a message', function(done){
 		Chat.create({
 			user: 'joseph'
 		}, function(err, chat){
