@@ -3,7 +3,19 @@ html(lang="en")
 head
 	meta(charset="UTF-8")
 	title This is cool
-body
-	include ./partials/header
-	block content
-	include ./partials/footer
+	<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+	<title>Breve.me</title>
+	<script src="/breve/bower_components/webcomponentsjs/webcomponents.js"></script>
+	<link rel="import" href="/breve/bower_components/polymer/polymer.html">
+	<link rel="import" href="/breve/elements/chat-app.html">
+//body
+//	include ./partials/header
+//	block content
+//	include ./partials/footer
+
+<body fullbleed unresolved>
+include ./partials/header
+<chat-app></chat-app>
+include ./partials/footer
+</body>
+</html>
