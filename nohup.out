@@ -1,0 +1,31 @@
+24 Jul 18:07:01 - [33m[nodemon] v1.3.8[39m
+24 Jul 18:07:01 - [33m[nodemon] to restart at any time, enter `rs`[39m
+24 Jul 18:07:01 - [33m[nodemon] watching: *.*[39m
+24 Jul 18:07:01 - [32m[nodemon] starting `node server.js`[39m
+exception in nodemon killing node
+Error: EBADF, read
+    at Error (native)
+
+----------------------------------------------------------
+If appropriate, please file an error with the output from:
+$ node /usr/bin/nodemon server.js --dump
+At http://github.com/remy/nodemon/issues/new
+----------------------------------------------------------
+
+API is running on port 3000
+API is running on port 3000
+29 Oct 20:09:56 - [33m[nodemon] v1.3.8[39m
+29 Oct 20:09:56 - [33m[nodemon] to restart at any time, enter `rs`[39m
+29 Oct 20:09:56 - [33m[nodemon] watching: *.*[39m
+29 Oct 20:09:56 - [32m[nodemon] starting `node server.js`[39m
+exception in nodemon killing node
+Error: EBADF, read
+    at Error (native)
+
+----------------------------------------------------------
+If appropriate, please file an error with the output from:
+$ node /usr/bin/nodemon server.js --dump
+At http://github.com/remy/nodemon/issues/new
+----------------------------------------------------------
+
+API is running on port 3000

@@ -19,7 +19,7 @@ app.use(bodyParser.json());
 app.set('view engine', 'jade');
 app.set('views', './views');
 
-app.use('/breve', require('./routes/api'));
+app.use('/breve', require('./routes/api')); //breve is the route and points to the api
 app.use('/breve/static', express.static(__dirname + '/static')); //go to http://209.135.132.117:3000/breve/static/main.css
 
 //for chat (move to static?
