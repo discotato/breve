@@ -13,10 +13,14 @@ HOW TO:
 	- body-parser (needed for express 4)
 	- mocha (you can install all using: npm install --save mongoose express mocha)
 	- chai (node assertion library > npm install --save chai)
-	- keep node running in the background using nodemon (sudo npm install -g nodemon) g for global
+	- nodemon keep node running in the background using nodemon (sudo npm install -g nodemon) g for global
 		- ensure you run you server.js as nodemon server.js
+		- running like this: > nohup nodemon server.js & 
+	- jade templating engine
+		- npm sudo install --save jade
+	- normalize css makes browsers render all elements more consistently. Install normalize with npm install --save normalize.css. Copy the normalize to static folder and name .scss
+	- gulp-sass and gulp-autoprefixer (optional). Install 
 	
-
 - Get the packages
 	- run npm init to create the package.json file
 	- run npm install --save(grabs dependencies and downloads them to node_modules)
@@ -32,7 +36,20 @@ Coding
 		> mocha tests
 	- install chai, an insertion library
 		- use expect(err).to.not.exist;
-
+- jade templating
+	- put your views in the views folder.
+	- in server.js set the views folder using app.set('views', './views');
+	- now instead of res.send("working"), render the view using
+		app.get('/breve', function(req, res){
+			res.render('home');
+		});
+	- footer and header templates are in the partials folder
+- css
+	- create a main.scss file which will be compiled by gulp
+	- create header.scss
+	- create gulpfile.js in application root
+	- run gulp to compile your .scss files into the main.css (> gulp)
+	
 Database
 ----------
 - we are using mongodb to store data.
@@ -45,7 +62,7 @@ Database
 	
 Running
 ----------
-- finally, run your node server with node server.js
+- finally, run your node server with node server.js or if you want to continue to run use > nohup nodemon server.js & 
 - use chrome extension called POSTMAN to test your api (chrome://apps/) in your web browser
 	- set body: raw, JSON (application/json)
 		- enter the following in the raw body: {"user":"joseph","message":"hi","time":"2015-07-23T21:34:28.861Z"}
