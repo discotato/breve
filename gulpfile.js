@@ -10,6 +10,5 @@ gulp.task('sass', function(){
 		.pipe(sass())
 		.pipe(prefixer())
 		.pipe(gulp.dest('./static'));
-	
 	//gulp.pipe(sass())
 });

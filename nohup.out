@@ -29,3 +29,117 @@ At http://github.com/remy/nodemon/issues/new
 ----------------------------------------------------------
 
 API is running on port 3000
+13 Nov 11:08:21 - [33m[nodemon] v1.3.8[39m
+13 Nov 11:08:21 - [33m[nodemon] to restart at any time, enter `rs`[39m
+13 Nov 11:08:21 - [33m[nodemon] watching: *.*[39m
+13 Nov 11:08:21 - [32m[nodemon] starting `node server.js`[39m
+exception in nodemon killing node
+Error: EBADF, read
+    at Error (native)
+
+----------------------------------------------------------
+If appropriate, please file an error with the output from:
+$ node /usr/bin/nodemon server.js --dump
+At http://github.com/remy/nodemon/issues/new
+----------------------------------------------------------
+
+API is running on port 3000
+24 Dec 17:38:23 - [33m[nodemon] v1.3.8[39m
+24 Dec 17:38:23 - [33m[nodemon] to restart at any time, enter `rs`[39m
+24 Dec 17:38:23 - [33m[nodemon] watching: *.*[39m
+24 Dec 17:38:23 - [32m[nodemon] starting `node server.js`[39m
+exception in nodemon killing node
+Error: EBADF, read
+    at Error (native)
+
+----------------------------------------------------------
+If appropriate, please file an error with the output from:
+$ node /usr/bin/nodemon server.js --dump
+At http://github.com/remy/nodemon/issues/new
+----------------------------------------------------------
+
+API is running on port 3000
+19 Jan 14:26:37 - [33m[nodemon] v1.3.8[39m
+19 Jan 14:26:37 - [33m[nodemon] to restart at any time, enter `rs`[39m
+19 Jan 14:26:37 - [33m[nodemon] watching: *.*[39m
+19 Jan 14:26:37 - [32m[nodemon] starting `node server.js`[39m
+exception in nodemon killing node
+Error: EBADF, read
+    at Error (native)
+
+----------------------------------------------------------
+If appropriate, please file an error with the output from:
+$ node /usr/bin/nodemon server.js --dump
+At http://github.com/remy/nodemon/issues/new
+----------------------------------------------------------
+
+API is running on port 3000
+4 Feb 12:45:37 - [33m[nodemon] v1.3.8[39m
+4 Feb 12:45:37 - [33m[nodemon] to restart at any time, enter `rs`[39m
+4 Feb 12:45:37 - [33m[nodemon] watching: *.*[39m
+4 Feb 12:45:37 - [32m[nodemon] starting `node server.js`[39m
+exception in nodemon killing node
+Error: EBADF, read
+    at Error (native)
+
+----------------------------------------------------------
+If appropriate, please file an error with the output from:
+$ node /usr/bin/nodemon server.js --dump
+At http://github.com/remy/nodemon/issues/new
+----------------------------------------------------------
+
+API is running on port 3000
+Error: /home/JosephDietzVEM2/breve/views/layout.jade:14
+    12| 	<style>
+    13| 	paper-input {
+  > 14| 		padding: 10px;
+    15| 	}
+    16| 	paper-shadow {
+    17| 		margin: 5px;
+
+unexpected text ;
+	}
+
+    at Object.Lexer.fail (/home/JosephDietzVEM2/breve/node_modules/jade/lib/lexer.js:887:11)
+    at Object.Lexer.next (/home/JosephDietzVEM2/breve/node_modules/jade/lib/lexer.js:947:15)
+    at Object.Lexer.lookahead (/home/JosephDietzVEM2/breve/node_modules/jade/lib/lexer.js:113:46)
+    at Parser.lookahead (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:102:23)
+    at Parser.peek (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:79:17)
+    at Parser.tag (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:773:22)
+    at Parser.parseTag (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:759:17)
+    at Parser.parseExpr (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:211:21)
+    at Parser.tag (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:819:29)
+    at Parser.parseTag (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:759:17)
+    at Parser.parseExpr (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:211:21)
+    at Parser.block (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:729:25)
+    at Parser.tag (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:838:24)
+    at Parser.parseTag (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:759:17)
+    at Parser.parseExpr (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:211:21)
+    at Parser.block (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:729:25)
+Error: /home/JosephDietzVEM2/breve/views/layout.jade:14
+    12| 	<style>
+    13| 	paper-input {
+  > 14| 		padding: 10px;
+    15| 	}
+    16| 	paper-shadow {
+    17| 		margin: 5px;
+
+unexpected text ;
+	}
+
+    at Object.Lexer.fail (/home/JosephDietzVEM2/breve/node_modules/jade/lib/lexer.js:887:11)
+    at Object.Lexer.next (/home/JosephDietzVEM2/breve/node_modules/jade/lib/lexer.js:947:15)
+    at Object.Lexer.lookahead (/home/JosephDietzVEM2/breve/node_modules/jade/lib/lexer.js:113:46)
+    at Parser.lookahead (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:102:23)
+    at Parser.peek (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:79:17)
+    at Parser.tag (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:773:22)
+    at Parser.parseTag (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:759:17)
+    at Parser.parseExpr (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:211:21)
+    at Parser.tag (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:819:29)
+    at Parser.parseTag (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:759:17)
+    at Parser.parseExpr (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:211:21)
+    at Parser.block (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:729:25)
+    at Parser.tag (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:838:24)
+    at Parser.parseTag (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:759:17)
+    at Parser.parseExpr (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:211:21)
+    at Parser.block (/home/JosephDietzVEM2/breve/node_modules/jade/lib/parser.js:729:25)

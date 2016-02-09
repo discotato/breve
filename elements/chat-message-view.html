@@ -9,7 +9,8 @@
                 float: left;
             }
         </style>
-        <div vertical layout start>
+        <!-- <div vertical layout start> -->
+		<div id = "messages" flex vertical layout start>
             <template repeat="{{message in model}}">
                 <paper-shadow>{{message}}</paper-shadow>
             </template>

@@ -8,12 +8,13 @@ head
 	<script src="/breve/bower_components/webcomponentsjs/webcomponents.js"></script>
 	<link rel="import" href="/breve/bower_components/polymer/polymer.html">
 	<link rel="import" href="/breve/elements/chat-app.html">
+	
 //body
 //	include ./partials/header
 //	block content
 //	include ./partials/footer
 
-<body fullbleed unresolved>
+<body onLoad="onLoad()" fullbleed unresolved vertical layout>
 include ./partials/header
 <chat-app></chat-app>
 include ./partials/footer
