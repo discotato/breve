@@ -1,52 +1,179 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/core-icon/core-icon.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<!-- import async module -->
+<link rel="import" href="../bower_components/polymer/lib/utils/async.html">
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
 
-<polymer-element name="chat-message-editor" constructor="ChatMessageEditor">
+<link rel="import" href="../elements/chat-message-view.html">
+
+<!-- import template repeater -->
+<link rel="import" href="../bower_components/polymer/lib/elements/dom-repeat.html">
+
+<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+
+<dom-module id="chat-message-editor">
 
 <template>
     <style>
         paper-input {
-            padding: 10px;
+            /*padding: 10px;
+			max-rows: "4";*/
+			position: relative;
+			bottom: 0;
+			padding: 10px;
+			width: 400px;
+			margin-right: .5%;
         }
-    </style>
+		
+		paper-icon-button {
+			/*position: fixed;
+			bottom: 0;
+			right: 0;
+			margin: 0 20px 10px 0;
+			bottom: 0;
+			right: 800px;*/
+			position: relative;
+		}
 
+    </style>
+	
+	<template is="dom-repeat" id="msgs" items="{{messages}}">
+	</paper-item>{{item.message}}</paper-item>
+	</template>
     <div id="container" horizontal layout center>
         <paper-input
             id="input"
             label="Enter message to send"
-            on-keypress="{{keyPressed}}"
+            on-keypress="keyPressed"
             flex>
         </paper-input>
         <paper-icon-button
             id="button"
-            icon="send"
-            on-tap="{{buttonTapped}}">
+            icon="favorite"
+            on-tap="buttonTapped">
         </paper-icon-button>
     </div>
 </template>
 
 <script>
-    Polymer({
-        sendMessage: function() {
-            this.asyncFire("message",
-                {
-                    message: this.$.input.value
-                });
-            this.$.input.value = "";
-        },
-        keyPressed: function(event, detail, sender) {
-            if (event.which == 13) {
-                this.sendMessage();
-                event.preventDefault();
-            }
-        },
-        buttonTapped: function(event, detail, sender) {
-            this.sendMessage();
-            event.preventDefault();
-        }
-    });
+
+    // Your new element extends the Polymer.Element base class
+	class ChatMessageEditor extends Polymer.Element {
+		static get is() { return 'chat-message-editor'; }
+		static get properties() {
+			return {
+				messages: {
+					type: Array,
+					notify: false, 
+					value: function () { return [] }
+					//observer: 'messageschanged'
+				},
+				socketIO: Object
+			}
+		}
+		
+		// Observe changes to the messages array
+		static get observers() {
+			return [
+				'messageAddedOrRemoved(messages.splices)'
+			]
+		}
+		
+		messageAddedOrRemoved(changedRecord)
+		{
+		}
+		
+		ready(){
+			super.ready();
+			//this.socket = io();
+			//var self = this;
+			//this.socketIO = self;
+		}
+		
+		messageschanged(value) {
+			var i = 0;
+		}
+
+		sendMsg(msg){
+			
+			//this.socket = io();
+			this.socket.emit('chat message', msg);
+			//this.socket.on('chat message', function(msg){
+			//	var u = 0;
+			//	u = u +1;
+			//	this.push('messages', {message: msg});
+				//self.$.input.value = "";
+				//setTimeout(() => self.sendMsg(msg));
+			//});
+			this.push('messages', {message: msg});
+			this.$.input.value = "";
+		}
+
+		sendMessage() {
+			var self = this;
+			var msg = this.$.input.value;
+			
+			self.socket = io();
+			self.socket.emit('chat message', this.$.input.value);
+			self.socket.on('chat message', function(msg){
+				var u = 0;
+				u = u +1;
+				//self.push('messages', {message: msg});
+				//self.$.input.value = "";
+				//setTimeout(() => self.sendMsg(msg));
+			});
+		}
+
+		test(sock, data) {
+		
+		sock.socket.emit('chat message', data);
+		
+		}
+		
+		keyPressed(event) {
+			if (event.which == 13) {
+				//this.sendMessage();
+				//setTimeout(() => this.sendMsg(this.$.input.value));
+				//this.sendMsg(this.$.input.value);
+				//this.push('messages', {message: this.$.input.value});
+				this.socket = io();
+				var self = this;
+				this.socket.on('chat message', function(msg){
+					//this.messages.push('messages', {message: msg});
+					//var i = 0;
+					console.log('The data is: ' + msg)
+				});
+				
+				
+				
+				//var check = function() {
+					var data = 'funchi';
+					
+				this.test(self, data);
+				
+				//	self.$.test(self, data);
+					//self.socket.emit('chat message', data);
+				//	return false;
+				//}
+				
+				//check();
+
+				
+				event.preventDefault();
+			}
+		}
+		
+		buttonTapped(event) {
+			this.sendMessage();
+			event.preventDefault();
+		}
+    }
+    //Now, register your new custom element so the browser can use it
+    customElements.define(ChatMessageEditor.is, ChatMessageEditor);
+
 </script>
 
-</polymer-element>
+</dom-module>

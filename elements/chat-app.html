@@ -1,53 +1,117 @@
+<script src="../bower_components/webcomponentsjs/webcomponents-loader.js"></script>
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../elements/chat-message-editor.html">
-<link rel="import" href="../elements/chat-message-view.html">
 
-<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
 
-<polymer-element name="chat-app" constructor="ChatApp">
+<!--<link rel="import" href="../elements/chat-message-editor.html">
+<link rel="import" href="../elements/chat-message-view.html"> -->
+
+
+
+
+
+<dom-module id="chat-app">
     <template>
         <style>
-            :host {
-                height: 100%;
+            :host > * {
+                height: 400px;
+				margin: auto;
+				/*border: 1px solid red;*/
+				/* overflow-y: auto; */  /* vertical scrollbar */
             }
             #container {
                 position: relative;
-                width: 100%;
-                height: 100%;
+                width: 400px;
+                height: 400px;
+				overflow-y: auto;
+				/*overflow: scroll;*/
             }
         </style>
 		<style>
 			paper-input {
 				padding: 10px;
 			}
-			paper-shadow {
+			paper-item {
 				margin: 5px;
 				padding: 10px;
 				float: left;
+				align-self: flex-start;
 			}
+			
 		</style>
-        <div id="container" layout vertical>
+			<template is="dom-repeat" id="msgs" items="{{messages}}">
+	</paper-item>{{item.message}}</paper-item>
+	</template>
+	
+	       <paper-input
+            id="input"
+            label="Enter message to send"
+            on-keypress="keyPressed"
+            flex>
+        </paper-input>
+		<!-- layout vertical -->
+		<!-- flex vertical layout start -->
+        <!--<div id="container" layout vertical>
             <chat-message-view id="view" model="{{model}}" flex></chat-message-view>
-            <chat-message-editor id="editor"></chat-message-editor>
-        </div>
+        </div> -->
+		<!--<div id="msg1" layout vertical>
+			<chat-message-editor id="editor"></chat-message-editor>
+		<div>-->
     </template>
+	
     <script>
-        Polymer({
-            model: [],
-            ready: function() {
-                this.socket = io();
-                var self = this;
-
-                function sendMessage(ev) {
-                    self.socket.emit('chat message', ev.detail.message);
-                }
-
-                this.$.editor.addEventListener('message', sendMessage);
-
-                this.socket.on('chat message', function(msg) {
-                    self.model.push(msg);
-                });
-            }
-        });
+		// Your new element extends the Polymer.Element base class
+		class ChatApp extends Polymer.Element {
+			static get is() { return 'chat-app'; }
+			static get properties() {
+				return {
+					messages: {
+						type: Array,
+						notify: false, 
+						value: function () { return [] }
+						//observer: 'messageschanged'
+					}
+				}
+			}
+			
+			
+			keyPressed(event) {
+			if (event.which == 13) {
+				//this.push('messages', {message: 'hi'});
+				
+				
+							
+			//var msg = this.$.input.value;
+			//var self = this;
+			//self.socket = io();
+			
+			//self.socket.on('chat message', function(msg){
+				
+			//	var u = 0;
+			//	u = u +1;
+				//self.push('messages', {message: msg});
+				//self.$.input.value = "";
+				//setTimeout(() => self.sendMsg(msg));
+			//});
+			
+			//var check = function (){
+			//	self.socket.emit('chat message', 'hi');
+			//	}
+				
+			//	check();
+			//	event.preventDefault();
+			//}
+		}
+			//ready()
+			//{
+			//}
+		}
+		//Now, register your new custom element so the browser can use it
+		customElements.define(ChatApp.is, ChatApp);
+		
+		
     </script>
-</polymer-element>
+	
+</dom-module>
+

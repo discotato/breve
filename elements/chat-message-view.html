@@ -1,22 +1,50 @@
-<link rel="import" href="../bower_components/paper-shadow/paper-shadow.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/polymer/lib/elements/dom-bind.html">
 
-<polymer-element name="chat-message-view" attributes="model" constructor="ChatMessageView">
+<dom-module id="chat-message-view" attributes="model">
     <template>
         <style>
-            paper-shadow {
+            paper-item {
                 margin: 5px;
                 padding: 10px;
                 float: left;
             }
+			
+			#messages {
+			/* flex vertical layout start */
+				display: flex;
+				flex-direction: column;
+				/* overflow-y: auto; */
+			}
         </style>
         <!-- <div vertical layout start> -->
-		<div id = "messages" flex vertical layout start>
-            <template repeat="{{message in model}}">
-                <paper-shadow>{{message}}</paper-shadow>
-            </template>
+		<div>{{item.message1}}</div>
+		
+		<div id="messages">
+			</paper-item>{{yourname}}</paper-item>
         </div>
     </template>
     <script>
-        Polymer({ });
+		// Your new element extends the Polymer.Element base class
+		class ChatMessageView extends Polymer.Element {
+			static get is() { return 'chat-message-view'; }
+			
+			static get properties() {
+				return {
+					yourname: {
+						type: String,
+						notify: false, 
+						value() {
+							return 'hi there';
+						}
+					}
+				}
+			}
+		}
+		//Now, register your new custom element so the browser can use it
+		customElements.define(ChatMessageView.is, ChatMessageView);
+  
     </script>
-</polymer-element>
+	
+</dom-module>
+
