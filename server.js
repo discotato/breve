@@ -180,7 +180,6 @@ function addRemoteUser(user, remoteuser){
 	});
 }
 
-
 //Add a user to the list of remote users (remote users = room users)
 function addUserToRoom(roomname, user){
 	RoomUser.count({user: user, roomName: roomname}, function (err, count){
@@ -334,7 +333,7 @@ app.get('/breve/room', function(req, res){
 app.post('/breve/room', function(req, res){
 	//authenticate in separate function
 	var users = new usermanage();
-	var username = req.body.email;
+	var username = req.body.email.trim();
 	if(username == req.session.auth['username']){
 		res.render('room', { userStatus: "You cannot chat with yourself. Please enter an email of your friend.", email: username });
 		return;
@@ -367,6 +366,8 @@ app.post('/breve/room', function(req, res){
 			
 					//add the remote user to buddy list
 					addRemoteUser(req.session.auth['username'], username);
+					//add user to remote user buddy list
+					addRemoteUser(username, req.session.auth['username']);
 					//add the remote user to room
 					addUserToRoom(req.session.auth['username'], username);
 					//add the host to the room
@@ -461,8 +462,8 @@ app.post('/breve/register', function(req, res){
 	//if(req.session.auth){
 	//	res.redirect('/');
 	//}
-	var username = req.body.email;
-	var ph = req.body.phone;
+	var username = req.body.email.trim().toLowerCase();
+	var ph = req.body.phone.trim();
 	var p = req.body.password;
 	var p1 = req.body.password1;
 	
@@ -537,7 +538,7 @@ app.get('/breve/login', function(req, res){
 });
 
 app.post('/breve/login', function(req, res){
-	var username = req.body.email;
+	var username = req.body.email.trim();
 	var p = req.body.password;
 	if(username.length > 0 && p.length > 0){
 		var users = new usermanage({ tokenExpiration: 8064 }); //1 year hours (eg. 1 week is 168 hours)
