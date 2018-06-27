@@ -1,0 +1,32 @@
+<div class="container body-content">
+    <section class="content-wrapper main-content clear-fix">
+	<div class="row">
+		<div class="col-md-12">
+			<h1>Select someone to talk</h1>
+		</div>
+		<div class="col-md-12">
+			{{#each hosts}}
+				<form method="post" action="./remotehost">
+				<input type="hidden" name="remoteHost" value="{{remoteUser}}">
+				<div class="form-group"><div class="col-sm-12"><input type="submit" class="wavesbutton" value="{{ remoteUser }}" /></div></div></br>
+				</form>
+			{{/each}}
+		</div>
+		<div class="col-md-12">
+			<h1>Or <a href="./room">Add</a> Someone</h1>
+		</div>
+	</div>
+	</section>
+</div>
+
+<script type="text/javascript" src="/breve/bower_components/Waves/dist/waves.min.js"></script>
+<script type="text/javascript" src="/breve/static/polymerform/build/jquery.polymer-form.min.js"></script>
+<script type="text/javascript">
+//init the wave button
+Waves.attach('.wavesbutton', ['waves-button', 'waves-float']);
+Waves.init();
+//init the polymerForm
+$(document).ready(function(){
+	$(".polymerform").polymerForm();
+});
+</script>

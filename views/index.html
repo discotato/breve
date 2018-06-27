@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Breve.me Smallest Chat App</title>
+<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+<link rel="icon" type="image/png" href="/breve/static/images/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/breve/static/images/favicon-16x16.png" sizes="16x16">
+<!-- <link rel="import" href="/breve/bower_components/polymer/polymer.html"> -->
+<!-- <link rel="import" href="/breve/elements/chat-app.html"> -->
+<!-- <link rel="import" href="/breve/elements/login-view.html"> -->
+<link rel="stylesheet" type="text/css" href="/breve/static/jquery-easy-loading/dist/jquery.loading.css" />
+
+<!-- <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script> -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="/breve/bower_components/Waves/dist/waves.min.css" />
+<link rel="stylesheet" type="text/css" href="/breve/static/polymerform/build/jquery.polymer-form.min.css" />
+<link rel="stylesheet" type="text/css" href="/breve/static/style.css" />
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.15/jquery.mask.min.js"></script>
+
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.15/jquery.mask.min.js"></script> -->
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.1/socket.io.js"></script>
+
+<!-- Latest compiled and minified CSS -->
+<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"> -->
+<!-- Latest compiled and minified JavaScript -->
+<!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script> -->
+
+<script>
+
+var rooms = {};
+var loggedInUser = "default";
+var friends = [];
+
+$(function () {
+	function scrollMessage(){
+		$('#messagewindow').animate({scrollTop: $('#messagewindow')[0].scrollHeight}, 2000);
+	}
+
+	function waitStart(){
+		$("#wait").css("display", "block");
+	}
+	
+	function waitEnd(){
+		$("#wait").css("display", "none");
+	}
+
+	var socket = io();
+	//check for user from session
+	rooms[loggedInUser] = socket;
+	
+	//check for friends from session
+	friends = [{user:"user1@gmail.com"},{user:"user2@gmail.com"}];
+	
+	$('#sendmessage').submit(function(e){
+		e.preventDefault();
+		if($('#m').val().trim().length > 0){
+			rooms[loggedInUser].emit('chat message', $('#m').val(), function(){
+				var i = 0;
+			});
+		}
+		$('#m').val('');
+		$('#m').focus();
+		scrollMessage();
+		//return false;
+	});
+	
+	function addUser(username)
+	{
+		socket.emit('add user', username, function(data){
+			var result = data;
+			if(result == true){
+				//hide the username
+				$('#username-view').hide();
+			}
+			else{
+				$('#username-error').append("This username is already on the server!");
+			}
+		});
+	}
+	
+	function displayMessage(msg)	{
+		//$('#messages').append($('<p>').text(msg.user + ": " + msg.message));
+		$('#messagewindow').append('<p>' + msg.user + ": " + msg.message + '</p>');
+	}
+	
+	function clearMessages(){
+		$('#messagewindow').empty();
+	}
+	
+	$('#setusername').submit(function(e){
+		e.preventDefault();
+		$('#username-error').empty();
+		//add a friend, ensure no duplicates
+		var username = $('#username').val();
+		var found = false;
+		if(username.length > 0){
+			for(var i = 0; i < friends.length; i++)
+			{
+				if(friends[i]["user"] == username)
+				{
+					found = true;
+					break;
+				}
+			}
+			if(!found){
+				$('#username-error').append("Congrats, you have added " + username + ".");
+				friends.push({user: username});
+				//add user to the server
+				addUser(username);
+				$('#username').val('');
+			}
+			else{
+				$('#username-error').append("This is already a friend!");
+			}
+		}
+	});
+	
+	//listen for events from the server
+	socket.on('usernames', function(data){
+		//a list of remaining room users after a disconnect event fires
+		$('#room-members').empty();
+		for(var i = 0; i < data.length; i++)
+		{
+			$('#room-members').append($('<li>').text(data[i]));
+		}
+	});
+	
+	socket.on('chat message', function(msg){
+		displayMessage(msg);
+		scrollMessage();
+		//$('#messages').append($('<li>').text(msg.user + ": " + msg.message));
+	});
+	
+	socket.on('load message', function(docs){
+		waitStart();
+		clearMessages();
+		for(i = 0; i < docs.length; i++)
+		{
+			displayMessage(docs[i]);
+		}
+		waitEnd();
+		scrollMessage();
+	});
+	
+	socket.on('redirect', function(redirectLocation){
+		window.location.href = redirectLocation;
+	});
+	
+});
+
+</script>
+
+
+</head>
+
+<!-- <body onLoad="onLoad()" fullbleed unresolved vertical layout> -->
+<body fullbleed unresolved vertical layout">
+
+<nav class="navbar navbar-light">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#"><img class="pull-left" src="breve/static/images/breve5.png" alt="Breve Chat App"></a>
+    </div>
+    <ul class="nav navbar-nav">
+      <li><a href="./breve/remotehost"><img src="breve/static/images/switch2.png" alt="Talk to Someone Else"></a></li>
+	  <li><a href="./breve/logout"><img src="breve/static/images/logout.png" alt="Logout"></a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- <div id="username-view">
+	<p>Enter Username:</p>
+	<p id="username-error"></p>
+	<form id="setusername">
+		<input class="user-input" size="35" id="username"></input>
+		<button>Create User</button>
+	</form>
+</div> -->
+
+<div id="room-member-view">
+	<!-- <p>Room Members:</p> -->
+	<ul id="room-members"></ul>
+</div>
+
+<!-- NOTE: only scroll window down on client key press! -->
+<!-- <div id="message-view">
+	<ul id="messages"></ul>
+	<form id="sendmessage" action="">
+	<input id="m" autocomplete="off" /><button>Send</button> 
+	</form>
+</div>-->
+
+
+<div class="container body-content">
+    <section class="content-wrapper main-content clear-fix">
+	<div class="row">
+		<div class="col-md-12">
+			<div id="chatwindow">
+				<div id="wait" class="loading-overlay-content loading-overlay"><br>Loading Messages..</div>
+				<div id="messagewindow">
+				</div>
+				<div id="inputcontainer">
+					<p><form id="sendmessage" action=""><input id="m" type="text" autocomplete="off" /><button class="wavesbutton">Send</button></form></p>
+				</div>
+			</div>
+		</div>
+	</div>
+	</section>
+</div>
+<!-- <login-view></login-view> -->
+<!-- <chat-app></chat-app> -->
+<h1></h1>
+
+<script type="text/javascript" src="/breve/bower_components/Waves/dist/waves.min.js"></script>
+<script type="text/javascript" src="/breve/static/polymerform/build/jquery.polymer-form.min.js"></script>
+<script type="text/javascript">
+//init the wave button
+Waves.attach('.wavesbutton', ['waves-button', 'waves-float']);
+Waves.init();
+//init the polymerForm
+$(document).ready(function(){
+	$(".polymerform").polymerForm();
+});
+</script>
+
+</body>
+
+</html>

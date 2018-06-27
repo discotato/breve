@@ -1,0 +1,45 @@
+<div class="container body-content">
+    <section class="content-wrapper main-content clear-fix">
+	<div class="row">
+		<div class="col-md-12">
+			<h1>Register</h1>
+		</div>
+		<div class="col-md-12">
+			<form method="post" action="./register">
+			<div class="form-group"><div class="col-sm-12"><div class="input-group"><label for="email">Email</label><input type="text" id="email" name="email" label="Email Address" value="{{ email }}" /></div></div></div>
+			<div class="form-group"><div class="col-sm-12"><div class="input-group"><label for="phone">Phone</label><input type="text" id="phone" class="phone" name="phone" label="Phone" value="{{ phone }}" /></div></div></div>
+			<div class="form-group"><div class="col-sm-12"><div class="input-group"><label for="password">Password</label><input type="password" id="password" name="password" label="Password" /></div></div></div>
+			<div class="form-group"><div class="col-sm-12"><div class="input-group"><label for="password1">Re-enter Password</label><input type="password" id="password1" name="password1" label="Re-enter Password" /></div></div></div>
+			<div class="form-group"><div class="col-sm-12"><input type="submit" class="wavesbutton" value="Create User" /></div></div>
+			<!-- <div class="form-group"><div class="col-sm-12"><a href="#" class="wavesbutton">Click Here</a></div></div> -->
+			</form>
+			<div class="col-sm-12"><div class="text-danger validation-summary-errors">{{ emailMessage }}</div></div>
+			<div class="col-sm-12"><div class="text-danger validation-summary-errors">{{ passwordMessage }}</div></div>
+			<div class="col-sm-12"><div class="text-danger validation-summary-errors">{{ phoneMessage }}</div></div>
+			<div class="col-sm-12"><div class="text-danger validation-summary-errors">{{ userStatus }}</div></div>
+		</div>
+		<div class="col-md-12">
+			<h1>Have an Account? <a href="./login">Login</a></h1>
+		</div>
+	</div>
+	</section>
+</div>
+
+<footer class="footer">
+  <div class="container">
+	<span class="text-muted">&copy; Breve.me 2018 <a href="about?caller=register">Smallest Chat App?</a></span>
+  </div>
+</footer>
+
+<script type="text/javascript" src="/breve/bower_components/Waves/dist/waves.min.js"></script>
+<script type="text/javascript" src="/breve/static/polymerform/build/jquery.polymer-form.min.js"></script>
+<script type="text/javascript">
+//init the wave button
+Waves.attach('.wavesbutton', ['waves-button', 'waves-float']);
+Waves.init();
+//init the polymerForm
+$(document).ready(function(){
+	$('.polymerform').polymerForm();
+	$('.phone').mask('(000) 000-0000');
+});
+</script>

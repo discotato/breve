@@ -1,0 +1,49 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/iron-form/iron-form.html">
+
+<dom-module id="register-view">
+<template>
+	<div>register</div>
+	
+	<iron-form id="registerForm">
+      <form method="post" action="./register">
+		<paper-input name="email" label="Email Address" flex></paper-input>
+		<paper-input name="pswd" label="Password" type="password" flex></paper-input>
+		<paper-input name="pswdMatch" label="Password Again" type="password" flex></paper-input>
+        <paper-checkbox name="subscribe" value="yes" label="Subscribe to Newsletter" checked>Subscribe to Newsletter</paper-checkbox>
+      </form>
+    </iron-form>
+	
+	<paper-button raised on-tap="formSubmitted" id="submitButton">Submit</paper-button>
+</template>
+<script>
+	// Your new element extends the Polymer.Element base class
+	class RegisterView extends Polymer.Element {
+		static get is() { return 'register-view'; }
+		ready(){
+			super.ready();
+			//this.$.submitButton.addEventListener('click', e => this.formSubmitted(e));
+			//this.$.registerForm.addEventListener('iron-form-submit', e => this.buttonTapped(e));
+			//this.$.myform.addEventListener('iron-form-response',this.formResponse);
+			//this.$.myform.addEventListener('iron-form-error',this.formError);
+
+		}
+		buttonTapped(event){
+			//alert('hello1');
+			//event.preventDefault();
+			//this.submit();
+		}
+		
+		formSubmitted(event){
+			//alert('hello');
+			this.$.registerForm.submit(event);
+		}
+	  
+    }
+    //Now, register your new custom element so the browser can use it
+    customElements.define(RegisterView.is, RegisterView);
+</script>
+</dom-module>

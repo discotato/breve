@@ -1,0 +1,44 @@
+<style>
+ul {
+  list-style-type: none;
+}
+.glyphicon {
+    font-size: 25px;
+}
+</style>
+<div class="container body-content">
+    <section class="content-wrapper main-content clear-fix">
+	<div class="row">
+		<div class="col-md-12">
+			<h1>About Breve!</h1>
+		</div>
+		<div class="col-md-12">
+			<p><h2>The smallest chat app with minimal but powerful features.</h2></p>
+			<p>
+				<ul>
+					<!-- <li><span class="glyphicon glyphicon-trash" aria-hidden="true"></span> You can chat with a friend and your messages are not stored in a database. Messages exists only on the client, therefore, you will not be able to access a chat history</li> -->
+					<li><span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span> Your messages are secure because they travel on HTTPS</li>
+					<li><span class="glyphicon glyphicon-phone-alt" aria-hidden="true"></span> Messages are directed to your phone by text message. The service is free but cellphone carrier rates apply to text messages</li>
+					<li><span class="glyphicon glyphicon-plane" aria-hidden="true"></span> We support North American phone numbers, sorry World</li>
+				</ul>
+			</p>
+			<p><h2>Communication should be cheap. Trim your cellphone plan and use Breve!</h2></p>
+		</div>
+		<div class="col-md-12">
+			<h1><a href="{{returnPage}}">Back</a></h1>
+		</div>
+	</div>
+	</section>
+</div>
+
+<script type="text/javascript" src="/breve/bower_components/Waves/dist/waves.min.js"></script>
+<script type="text/javascript" src="/breve/static/polymerform/build/jquery.polymer-form.min.js"></script>
+<script type="text/javascript">
+//init the wave button
+Waves.attach('.wavesbutton', ['waves-button', 'waves-float']);
+Waves.init();
+//init the polymerForm
+$(document).ready(function(){
+	$(".polymerform").polymerForm();
+});
+</script>

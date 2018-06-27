@@ -1,0 +1,18 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+
+<dom-module id="login-view">
+<template>
+	<div>login</div>
+	
+	
+</template>
+<script>
+    // Your new element extends the Polymer.Element base class
+    class LoginView extends Polymer.Element {
+      static get is() { return 'login-view'; }
+    }
+    //Now, register your new custom element so the browser can use it
+    customElements.define(LoginView.is, LoginView);
+</script>
+</dom-module>
