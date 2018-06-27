@@ -143,11 +143,12 @@ function addLiveRoom(createdBy, roomName){
 }
 
 //only supports one on one messaging and not conference calls.
-function saveRoomMessage(messageCreatedBy, message){
-	var queryRoom = Room.find({'$or':[{createdByUser:messageCreatedBy}, {name:messageCreatedBy}]});
+function saveRoomMessage(user, remoteUser, message){
+	var queryRoom = Room.find({'$or':[{'$and':[{createdByUser:user}, {name:remoteUser}]}, {'$and':[{createdByUser:remoteUser}, {name:user}]}]});
 	queryRoom.exec(function(err, docs){
 		if(docs.length > 0){
-			var mesg = new Message({user:messageCreatedBy, message:message, room:docs[0]});
+			console.log("message saved:" + message);
+			var mesg = new Message({user:user, message:message, room:docs[0]});
 			mesg.save(function(err){
 				if(err) throw err;
 			});
@@ -223,6 +224,7 @@ app.post('/tel/voice', function(req, res){
 		tropo.on("error", null, "/tel/voice/error", true);
 	}
 	res.send(tropowebapi.TropoJSON(tropo));
+	
 });
 
 app.post('/tel/voice/answer', function(req, res){
@@ -653,7 +655,7 @@ io.on('connection', function(socket) {
 		//	hostSockets[key].emit('chat message', {message: data, user: username});
 		//}
 		console.log(roomSockets);
-		saveRoomMessage(socket.handshake.session.auth['username'], data);
+		saveRoomMessage(socket.handshake.session.auth['username'], socket.handshake.session.room['remoteuser'], data);
 		var sockets = null;
 		for(var key in roomSockets){
 			if((roomSockets[key].createdByUser == socket.handshake.session.auth['username'] && roomSockets[key].name == socket.handshake.session.room['remoteuser']) || (roomSockets[key].createdByUser == socket.handshake.session.room['remoteuser'] && roomSockets[key].name == socket.handshake.session.auth['username'])){
