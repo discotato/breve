@@ -6,6 +6,7 @@ var bodyParser = require('body-parser');
 var path = require('path');
 var usermanage = require('user-management');
 var validator = require('email-validator');
+//var nodemailer = require('nodemailer');
 
 //voice token
 //6171474455627452724a45454d5741754e59546c4e67515353685979657252475959486b58586e746f484558 
@@ -64,6 +65,14 @@ mongoose.connect('mongodb://localhost/breve', {useMongoClient: true}, function(e
 	}
 });
 
+//var transporter = nodemailer.createTransport({
+//  service: 'gmail',
+//  auth: {
+//    user: 'brevemeco@gmail.com',
+ //   pass: 'Seppljd1'
+//  }
+//});
+
 var Message = require('./models/message');
 var Room = require('./models/room');
 var RemoteUser = require('./models/remoteuser');
@@ -92,6 +101,22 @@ var setRemoteHost = function(err, req, host){
 	req.session.room['remoteuser'] = host;
 	return;
 };
+
+//function sendEmail(){
+//	var mailOptions = {
+//		from: 'brevemeco@gmail.com',
+//		to: 'matcha@gmail.com',
+//		subject: 'Sending Email using Node.js',
+//		text: 'That was easy!'
+//	};
+//	transporter.sendMail(mailOptions, function(error, info){
+//		if (error) {
+//			console.log(error);
+//		} else {
+//			console.log('Email sent: ' + info.response);
+//		}
+//	});
+//}
 
 function getRemoteHost(username, callback){
 	Room.find({user: username, host: {'$ne': username}, name: "default"}, function(err, docs){
@@ -291,6 +316,7 @@ app.post('/subscribe/new', function(req, res){
 });
 
 app.get('/', function(req, res){
+	//sendEmail();
 	if(req.session.auth){
 		console.log(req.session.auth['token']);
 		var users = new usermanage({ tokenExpiration: 8064 }); //1 year hours (eg. 1 week is 168 hours)
