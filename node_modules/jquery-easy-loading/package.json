@@ -1,0 +1,80 @@
+{
+  "name": "jquery-easy-loading",
+  "version": "1.3.0",
+  "description": "Easily add and manipulate loading states of any element on the page",
+  "keywords": [
+    "jquery",
+    "jquery-plugin",
+    "ecosystem:jquery",
+    "overlay",
+    "loading",
+    "loader",
+    "ajax"
+  ],
+  "author": {
+    "name": "Carlos Bonetti",
+    "email": "carlosb_bc@hotmail.com"
+  },
+  "license": "MIT",
+  "url": "http://github.com/CarlosBonetti/jquery-loading",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/CarlosBonetti/jquery-loading.git"
+  },
+  "homepage": "http://carlosbonetti.github.io/jquery-loading/",
+  "main": "./dist/jquery.loading.js",
+  "style": [
+    "./dist/jquery.loading.css"
+  ],
+  "scripts": {
+    "start": "grunt watch",
+    "build": "grunt",
+    "test": "grunt test",
+    "version": "npm run build && git add dist/"
+  },
+  "peerDependencies": {
+    "jquery": ">=1.7"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-cli": "^0.1.13",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-cssmin": "^1.0.2",
+    "grunt-contrib-jshint": "^1.0.0",
+    "grunt-contrib-qunit": "^1.2.0",
+    "grunt-contrib-uglify": "^2.0.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "jquery": "^1.11.1",
+    "jshint": "^2.9.4",
+    "qunitjs": "^2.0.1"
+  },
+  "gitHead": "9ee0b5ee9e24c608405644f691801670c73a8807",
+  "bugs": {
+    "url": "https://github.com/CarlosBonetti/jquery-loading/issues"
+  },
+  "_id": "jquery-easy-loading@1.3.0",
+  "_shasum": "d9a1bd8db3ebf0218d0ddef1d462bb7742f9cc41",
+  "_from": "jquery-easy-loading@latest",
+  "_npmVersion": "3.10.10",
+  "_nodeVersion": "6.9.5",
+  "_npmUser": {
+    "name": "carlosbonetti",
+    "email": "carlosb_bc@hotmail.com"
+  },
+  "dist": {
+    "shasum": "d9a1bd8db3ebf0218d0ddef1d462bb7742f9cc41",
+    "tarball": "https://registry.npmjs.org/jquery-easy-loading/-/jquery-easy-loading-1.3.0.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "carlosbonetti",
+      "email": "carlosb_bc@hotmail.com"
+    }
+  ],
+  "_npmOperationalInternal": {
+    "host": "s3://npm-registry-packages",
+    "tmp": "tmp/jquery-easy-loading-1.3.0.tgz_1512751345142_0.9295889013446867"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/jquery-easy-loading/-/jquery-easy-loading-1.3.0.tgz"
+}
