@@ -77,10 +77,10 @@ def main():
 	body = body % ("", 'https://breve.me')
 	#/uploads/recording.wav
 	#gather recordings
-	recordings = [f for f in listdir('/home/JosephDietzVEM2/dev/breve/uploads') if isfile(join('/home/JosephDietzVEM2/dev/breve/uploads', f))]
+	recordings = [f for f in listdir('/home/crowdover/dev/breve/uploads') if isfile(join('/home/crowdover/dev/breve/uploads', f))]
 	i = 0
 	for name in recordings:
-		recordings[i] = "/home/JosephDietzVEM2/dev/breve/uploads/" + name
+		recordings[i] = "/home/crowdover/dev/breve/uploads/" + name
 		i += 1
 	if(len(recordings) > 0):
 		#print(recordings)

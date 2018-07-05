@@ -6,14 +6,17 @@ var bodyParser = require('body-parser');
 var path = require('path');
 var usermanage = require('user-management');
 var validator = require('email-validator');
-//var nodemailer = require('nodemailer');
+var nodemailer = require('nodemailer');
+var httpMin = require('http.min')
 
+var tropoApi = "api.tropo.com";
+var tropoApiVer = "1.0";
 //voice token
 //6171474455627452724a45454d5741754e59546c4e67515353685979657252475959486b58586e746f484558 
 //https://api.tropo.com/1.0/sessions?action=create&token=6171474455627452724a45454d5741754e59546c4e67515353685979657252475959486b58586e746f484558 
 
 //messaging token
-//547076715655474264757843696c4465737855556d476b546b464167425165415a73726d4176575071785952
+var msgTok = "547076715655474264757843696c4465737855556d476b546b464167425165415a73726d4176575071785952";
 //https://api.tropo.com/1.0/sessions?action=create&token=547076715655474264757843696c4465737855556d476b546b464167425165415a73726d4176575071785952 
 
 //sip client
@@ -24,7 +27,7 @@ var validator = require('email-validator');
 
 //tropo functions
 var tropowebapi = require('tropo-webapi');
-var sys = require('sys');
+//var sys = require('sys');
 //Install multi part to access files >npm install --save multer
 var multer = require('multer');
 var upload = multer({ dest: 'uploads/' });
@@ -65,13 +68,20 @@ mongoose.connect('mongodb://localhost/breve', {useMongoClient: true}, function(e
 	}
 });
 
-//var transporter = nodemailer.createTransport({
-//  service: 'gmail',
-//  auth: {
-//    user: 'brevemeco@gmail.com',
- //   pass: 'Seppljd1'
-//  }
-//});
+//service: 'gmail',
+var transporter = nodemailer.createTransport({
+	host: 'mail.robobean.com',
+	port: 587,
+	secure: false,
+	requireTLS: true,
+	auth: {
+		user: 'breve',
+		pass: 'imjosed1'
+	},
+	tls: {
+		rejectUnauthorized: false
+	}
+});
 
 var Message = require('./models/message');
 var Room = require('./models/room');
@@ -102,21 +112,21 @@ var setRemoteHost = function(err, req, host){
 	return;
 };
 
-//function sendEmail(){
-//	var mailOptions = {
-//		from: 'brevemeco@gmail.com',
-//		to: 'matcha@gmail.com',
-//		subject: 'Sending Email using Node.js',
-//		text: 'That was easy!'
-//	};
-//	transporter.sendMail(mailOptions, function(error, info){
-//		if (error) {
-//			console.log(error);
-//		} else {
-//			console.log('Email sent: ' + info.response);
-//		}
-//	});
-//}
+function sendEmail(toEmail, subject, body){
+	var mailOptions = {
+		from: 'breve@mail.robobean.com',
+		to: toEmail,
+		subject: subject,
+		text: body
+	};
+	transporter.sendMail(mailOptions, function(error, info){
+		if (error) {
+			console.log(error);
+		} else {
+			console.log('Email sent: ' + info.response);
+		}
+	});
+}
 
 function getRemoteHost(username, callback){
 	Room.find({user: username, host: {'$ne': username}, name: "default"}, function(err, docs){
@@ -218,6 +228,20 @@ function addUserToRoom(roomname, user){
 	});
 }
 
+//number format: (780) 799 9999
+function sendTropoSMS(msg, number){
+	var newNumber = number.replace(/\(|\)|\s+/gi, '');
+	newNumber = "1" + newNumber;
+	console.log("calling tropo");
+	var getPath = "https://" + tropoApi + "/" + tropoApiVer + "/sessions?action=create&token=" + msgTok + "&msg=" + msg + "&number=" + newNumber;
+	httpMin(getPath).then(function (result){
+		console.log('Code: ' + result.response.statusCode)
+		console.log('Response: ' + result.data)
+	})
+}
+
+sendTropoSMS("hellox1", "(780) 788 7937");
+
 //Check if buddy exists in the buddy list
 //RemoteUser.count({user: user, remoteUser: remoteuser}, function (err, count){
 //	if(err) throw err;
@@ -249,6 +273,30 @@ app.post('/tel/voice', function(req, res){
 	}
 	res.send(tropowebapi.TropoJSON(tropo));
 	
+});
+
+app.post('/tel/text', function(req, res){
+	var tropo = new tropowebapi.TropoWebAPI();
+	console.log(res.statusCode);
+	console.log(req.body);
+	try{
+		if(req.body['session']['userType'] = "NONE"){
+			if(req.body['session']['parameters']['action'] == 'create'){
+				tropo.call("+" + req.body['session']['parameters']['number'], null, null, null, null, null, "SMS", null, null, null);
+				tropo.say(req.body['session']['parameters']['msg']);
+				res.end(TropoJSON(tropo));
+			}
+		}
+		else if(req.body['session']['userType'] = "HUMAN"){
+			tropo.call("+" + req.body['session']['to']['id'], null, null, null, null, null, "SMS", null, null, null);
+			tropo.say(req.body['session']['initialText']);
+			res.end(TropoJSON(tropo));
+		}
+	}
+	catch(err){
+		//do nothing
+		console.log("Text sending failed");
+	}
 });
 
 app.post('/tel/voice/answer', function(req, res){
@@ -316,26 +364,14 @@ app.post('/subscribe/new', function(req, res){
 });
 
 app.get('/', function(req, res){
-	//sendEmail();
 	if(req.session.auth){
-		console.log(req.session.auth['token']);
 		var users = new usermanage({ tokenExpiration: 8064 }); //1 year hours (eg. 1 week is 168 hours)
 		users.load(function(err) {
 			users.isTokenValid(req.session.auth['token'], function(err, valid) {
 				users.close();
 				if (!valid) {
-					console.log('The token is not valid');
 					res.redirect('/breve/login');
 				} else {
-					console.log('The token is valid');
-					//check to ensure user is connected to a room (remove any stale rooms)
-					//RoomUser.count({user: req.session.auth['username']}, function (err, count){
-					//	if(err) throw err;
-					//	if(count == 0){
-					//		res.redirect('/breve/room');
-					//		return;
-					//	}
-					//});
 					res.sendFile(path.join(__dirname + '/views/index.html'));
 				}
 			});
