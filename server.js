@@ -11,6 +11,7 @@ var httpMin = require('http.min')
 
 var tropoApi = "api.tropo.com";
 var tropoApiVer = "1.0";
+var tropoPhoneNumber = "15199002139"; //phone assigned to the tropo app
 //voice token
 //6171474455627452724a45454d5741754e59546c4e67515353685979657252475959486b58586e746f484558 
 //https://api.tropo.com/1.0/sessions?action=create&token=6171474455627452724a45454d5741754e59546c4e67515353685979657252475959486b58586e746f484558 
@@ -53,9 +54,10 @@ var sharedsession = require("express-socket.io-session");
 //attach session
 app.use(session);
 
-//keep track of rooms
-//roomSockets['g@g.com'] = {createdByUser: 'g@g.com', name:'h@h.com', sockets:[{socketUser:'user', socket:'socketA'}]};
+//keep track of rooms and phone pairs.
+//roomSockets['g@g.com'] = {createdByUser: 'g@g.com', name:'h@h.com', sockets:[{socketUser:'user', socket:'socketA'}], phoneNumbers:[{user:'acapeg@gmail.com', phone:'17807421221'}]};
 //roomSockets['g@g.com'].sockets.push({socketUser:'user', socket:'socketA'});
+//roomSockets['g@g.com'].phoneNumbers.push({user:'acapeg@gmail.com', phone:'17807421221'});
 var roomSockets = {};
 var hostSockets = {};
 
@@ -135,6 +137,18 @@ function getRemoteHost(username, callback){
 	});
 }
 
+function getRoomSocket(username){
+	for(var key in roomSockets){
+		var room = roomSockets[key];
+		for(var i = 0; i < room.sockets.length; i++){
+			if(room.sockets[i].socketUser == username){
+				return room.sockets[i];
+			}
+		}
+	}
+	return null;
+}
+
 function createRoomSocket(createdBy, roomName){
 	var found = false;
 	for(var key in roomSockets){
@@ -144,16 +158,57 @@ function createRoomSocket(createdBy, roomName){
 		}
 	}
 	if(!found){
-		roomSockets[createdBy] = {createdByUser:createdBy, name:roomName, sockets:[]};
+		roomSockets[createdBy] = {createdByUser:createdBy, name:roomName, sockets:[], phoneNumbers:[]};
+		//add phone number pairs
+		var conn = mongoose.createConnection('mongodb://localhost/user_management');
+		var userModel = conn.model('User', new mongoose.Schema({username: String, extras:{handle: String, phone: String, phone1: String}}));
+		userModel.find({'$or':[{username:createdBy}, {username:roomName}]}, function(error, result){
+			for(var i = 0; i < result.length; i++){
+				roomSockets[createdBy].phoneNumbers.push({user:result[i].username, phone:result[i].extras.phone1});
+				//console.log(result[i]);
+			}
+			conn.close();
+		});
 	}
 	return;
+}
+
+//returns phoneNumbers:[{user:'acapeg@gmail.com', phone:'17807421221'}]
+function getPhoneNumbers(username){
+	var room = null;
+	console.log(roomSockets);
+	for(var key in roomSockets){
+		if(roomSockets[key].createdByUser == username || roomSockets[key].name == username){
+			room = roomSockets[key];
+			break;
+		}
+	}
+	if(room){
+		console.log("getPhNums" + room.phoneNumbers);
+		return room.phoneNumbers;
+	}
+	return null;
+}
+
+function getPhoneNumber(username){
+	var phoneNums = getPhoneNumbers(username);
+	if(phoneNums){
+		for(var i = 0; i < phoneNums.length; i++){
+			if(phoneNums[i].user == username){
+				return phoneNums[i].phone;
+			}
+		}
+	}
+	return null;
 }
 
 function removeRoomSocket(username){
 	for(var key in roomSockets){
 		if(roomSockets[key].createdByUser == username || roomSockets[key].name == username){
 			for(var i = 0; i < roomSockets[key].sockets.length; i++){
-				roomSockets[key].sockets.splice(i, 1);
+				if(roomSockets[key].sockets[i].socketUser == username){
+					roomSockets[key].sockets.splice(i, 1);
+				}
 			}
 			break;
 		}
@@ -228,10 +283,22 @@ function addUserToRoom(roomname, user){
 	});
 }
 
-//number format: (780) 799 9999
-function sendTropoSMS(msg, number){
-	var newNumber = number.replace(/\(|\)|\s+/gi, '');
+//number format: (780) 799 9999 to 17807999999
+function cleanPhone(number){
+	var newNumber = number.replace(/\(|\)|\-|\s+/gi, '');
 	newNumber = "1" + newNumber;
+	return newNumber;
+}
+
+//unclean number format: (780) 799 9999
+function sendTropoSMS(msg, number, clean){
+	var newNumber = "";
+	if(clean){
+		newNumber = cleanPhone(number);
+	}
+	else{
+		newNumber = number;
+	}
 	console.log("calling tropo");
 	var getPath = "https://" + tropoApi + "/" + tropoApiVer + "/sessions?action=create&token=" + msgTok + "&msg=" + msg + "&number=" + newNumber;
 	httpMin(getPath).then(function (result){
@@ -240,7 +307,34 @@ function sendTropoSMS(msg, number){
 	})
 }
 
-sendTropoSMS("hellox1", "(780) 788 7937");
+function saveSMS(numberFrom, msg, timestamp){
+	console.log("Storing text: " + numberFrom + " " + msg + " " + timestamp);
+	var conn = mongoose.createConnection('mongodb://localhost/user_management');
+	var userModel = conn.model('User', new mongoose.Schema({username: String}));
+	userModel.findOne({'extras.phone1': numberFrom}, function(error, result){
+		//save message
+		//console.log("result" + result);
+		if(result != null){
+			var remoteUser = result['username'];
+			var user = "";
+			//get phone pair
+			var phoneNumbers = getPhoneNumbers(remoteUser);
+			if(phoneNumbers){
+				for(var i = 0; i < phoneNumbers.length; i++){
+					if(phoneNumbers[i].user != remoteUser){
+						user = phoneNumbers[i].user;
+						break;
+					}
+				}
+				if(user != ""){
+					console.log("saveRoomMessage:" + user + " " + remoteUser + " " + msg);
+					saveRoomMessage(user, remoteUser, msg);
+				}
+			}
+		}
+		conn.close();
+	});
+}
 
 //Check if buddy exists in the buddy list
 //RemoteUser.count({user: user, remoteUser: remoteuser}, function (err, count){
@@ -279,24 +373,30 @@ app.post('/tel/text', function(req, res){
 	var tropo = new tropowebapi.TropoWebAPI();
 	console.log(res.statusCode);
 	console.log(req.body);
-	try{
-		if(req.body['session']['userType'] = "NONE"){
+	//try{
+		if(req.body['session']['userType'] == "NONE"){
 			if(req.body['session']['parameters']['action'] == 'create'){
 				tropo.call("+" + req.body['session']['parameters']['number'], null, null, null, null, null, "SMS", null, null, null);
 				tropo.say(req.body['session']['parameters']['msg']);
 				res.end(TropoJSON(tropo));
 			}
 		}
-		else if(req.body['session']['userType'] = "HUMAN"){
-			tropo.call("+" + req.body['session']['to']['id'], null, null, null, null, null, "SMS", null, null, null);
-			tropo.say(req.body['session']['initialText']);
-			res.end(TropoJSON(tropo));
+		else if(req.body['session']['userType'] == "HUMAN"){
+			//text from tropo server, store the message in the db
+			if(req.body['session']['to']['id'] == tropoPhoneNumber){
+				saveSMS(req.body['session']['from']['id'], req.body['session']['initialText'], req.body['session']['timestamp']);
+			}
+			else{
+				tropo.call("+" + req.body['session']['to']['id'], null, null, null, null, null, "SMS", null, null, null);
+				tropo.say(req.body['session']['initialText']);
+				res.end(TropoJSON(tropo));
+			}
 		}
-	}
-	catch(err){
+	//}
+	//catch(err){
 		//do nothing
-		console.log("Text sending failed");
-	}
+	//	console.log("Text sending failed");
+	//}
 });
 
 app.post('/tel/voice/answer', function(req, res){
@@ -576,7 +676,8 @@ app.post('/breve/register', function(req, res){
 				var handleTemp = username.split('@');
 				var extras = {
 					handle: handleTemp[0],
-					phone: ph
+					phone: ph,
+					phone1: cleanPhone(ph)
 				};
 				users.createUser(username, p, extras, function (err) {
 					console.log('User created');
@@ -724,6 +825,14 @@ io.on('connection', function(socket) {
 			if((roomSockets[key].createdByUser == socket.handshake.session.auth['username'] && roomSockets[key].name == socket.handshake.session.room['remoteuser']) || (roomSockets[key].createdByUser == socket.handshake.session.room['remoteuser'] && roomSockets[key].name == socket.handshake.session.auth['username'])){
 				sockets = roomSockets[key].sockets;
 				break;
+			}
+		}
+		
+		//send SMS if remote user is not logged in
+		if(getRoomSocket(socket.handshake.session.room['remoteuser']) == null){
+			var remoteUserPhone = getPhoneNumber(socket.handshake.session.room['remoteuser']);
+			if(remoteUserPhone != null){
+				sendTropoSMS(data, remoteUserPhone, false);
 			}
 		}
 
