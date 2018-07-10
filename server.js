@@ -243,16 +243,14 @@ function getPhoneNumber(username){
 
 function removeRoomSocket(socketId){
 	for(var key in roomSockets){
-		//if(roomSockets[key].createdByUser == username || roomSockets[key].name == username){
-			for(var i = 0; i < roomSockets[key].sockets.length; i++){
-				if(roomSockets[key].sockets[i].socket.id == socketId){
-					roomSockets[key].sockets.splice(i, 1);
-					console.log("removed:" + socketId);
-					console.log(roomSockets[key]);
-				}
+		for(var i = 0; i < roomSockets[key].sockets.length; i++){
+			if(roomSockets[key].sockets[i].socket.id == socketId){
+				roomSockets[key].sockets.splice(i, 1);
+				console.log("removed:" + socketId);
+				console.log(roomSockets[key]);
 			}
-			break;
-		//}
+		}
+		break;
 	}
 }
 
@@ -377,14 +375,6 @@ function saveSMS(numberFrom, msg, timestamp){
 	});
 }
 
-//Check if buddy exists in the buddy list
-//RemoteUser.count({user: user, remoteUser: remoteuser}, function (err, count){
-//	if(err) throw err;
-//	console.log('count: ' + count);
-//	if(count > 0){
-//		return true;
-//	}
-//});
 
 //telephone functions
 app.post('/tel/voice', function(req, res){
@@ -551,24 +541,6 @@ app.post('/breve/room', function(req, res){
 				if(exists){
 					console.log("user exists:" + username);
 					req.session.room['remoteuser'] = username;
-					//Room.count({'$or':[{hostUser:req.session.auth['username']}, {hostUser:username}]}, function (err, count){
-					//	if(err) throw err;
-					//	if (count == 0){
-					//		//no room exists
-					//		req.session.room['roomname'] = req.session.auth['username'];
-					//		var room = new Room({hostUser: req.session.auth['username'], remoteUser: "", name: req.session.auth['username']});
-					//		room.save(function(err){
-					//			if(err) throw err;
-					//		});
-					//	}
-					//	else {
-					//		req.session.room['roomname'] = username;
-					//	}
-					//});
-					//var remoteUser = new RemoteUser({user: req.session.auth['username'], remoteUser: username, nick: username});
-					//remoteUser.save(function(err){
-					//	if(err) throw err;
-					//});
 			
 					//add the remote user to buddy list
 					addRemoteUser(req.session.auth['username'], username);
@@ -627,24 +599,6 @@ app.post('/breve/remotehost', function(req, res){
 		//create a record of the live rooms
 		addLiveRoom(req.session.auth['username'], req.body.remoteHost);
 		
-		//get the room
-		//if(req.session.room['roomname'] == "")
-		//{
-		//	var queryRoom = Room.find({'$or':[{hostUser:req.session.auth['username']}, {hostUser:req.body.remoteHost}]});
-		//	queryRoom.exec(function(err, docs){
-		//		var currentRoom = "";
-		//		if(docs[0].hostUser == req.body.remoteHost){
-		//			currentRoom = req.body.remoteHost;
-		//		}
-		//		else{
-		//			currentRoom = req.session.auth['username'];
-		//		}
-		//		var roomUser = new RoomUser({user: req.session.auth['username'], roomName: currentRoom});
-		//		roomUser.save(function(err){
-		//			if(err) throw err;
-		//		});
-		//	});
-		//}
 		res.redirect('/');
 	}
 	else{
@@ -654,20 +608,10 @@ app.post('/breve/remotehost', function(req, res){
 });	
 
 app.get('/breve/register', function(req, res){
-	//res.sendFile(path.join(__dirname + '/views/register.html'));
-	//if(req.session.auth){
-	//	res.redirect('/breve');
-	//}
-	//else{
-	//	res.render('register');
-	//}
 	res.render('register');
 });
 
 app.post('/breve/register', function(req, res){
-	//if(req.session.auth){
-	//	res.redirect('/');
-	//}
 	var username = req.body.email.trim().toLowerCase();
 	var ph = req.body.phone.trim();
 	var p = req.body.password;
@@ -727,11 +671,6 @@ app.post('/breve/register', function(req, res){
 					console.log('User created');
 					//create default user settings
 					setUserSetting(username, "offline", "sms");
-					//create a default room
-					//var room = new Room({hostUser: username, remoteUser: "", name: "default"});
-					//room.save(function(err){
-					//	if(err) throw err;
-					//});
 					users.close();
 					res.render('register-result', { email: username });
 					return;
@@ -739,7 +678,6 @@ app.post('/breve/register', function(req, res){
 			}
 		});
 	});
-	//res.sendFile(path.join(__dirname + '/views/register.html'));
 });
 
 app.get('/breve/login', function(req, res){
@@ -766,8 +704,6 @@ app.post('/breve/login', function(req, res){
 					return;
 				} else {
 					console.log('User token is: '+ result.token);
-					//clean up old sockets
-					//removeRoomSocket(username);
 					if(!req.session.auth){
 						req.session.auth = {}
 					}
@@ -779,8 +715,6 @@ app.post('/breve/login', function(req, res){
 					req.session.room['remoteuser'] = "";
 					req.session.room['roomname'] = "";
 					loadUserSettings(username);
-					//If the room was deleted, create one
-					//addHostRoom(username);
 					res.redirect('/breve/remotehost');
 				}
 				users.close();
@@ -836,12 +770,6 @@ io.on('connection', function(socket) {
 		}
 		//
 		console.log(roomSockets);
-		//find the room
-		//var queryRoom = Room.find({'$or':[{createdByUser:socket.handshake.session.auth['username']}, {name:socket.handshake.session.auth['username']}]});
-		//queryRoom.exec(function(err, docs){
-		//	console.log("xxxrrr" + docs[0].name);
-		//});
-		
 		//{'$or':[{'room.name' : socket.handshake.session.auth['username']}, {'room.createdByUser' : socket.handshake.session.auth['username']}]}
 		//db.messages.find({'$or':[{"room.name" : "g@g.com"}, {"room.createdByUser" : "g@g.com"}]})
 		//db.messages.find({'$or':[{'$and':[{"room.name" : "g@g.com"}, {"room.createdByUser" : "i@i.com"}]}, {'$and':[{"room.name" : "i@i.com"}, {"room.createdByUser" : "g@g.com"}]}]})
@@ -861,11 +789,7 @@ io.on('connection', function(socket) {
 		else{
 			io.emit('redirect', '/breve/login');
 		}
-		//Emit sockets. Client will emit back to server to store the messages to the database.
-		//for (var key in hostSockets){
-			//console.log( key, hostSockets[key] );
-		//	hostSockets[key].emit('chat message', {message: data, user: username});
-		//}
+
 		console.log(roomSockets);
 		saveRoomMessage(socket.handshake.session.auth['username'], socket.handshake.session.room['remoteuser'], data);
 		var sockets = null;
@@ -890,11 +814,7 @@ io.on('connection', function(socket) {
 				sockets[i].socket.emit('chat message', {message: data, user: username});
 			}
 		}
-		
-		//find the room
-		//var queryRoom = Room.find({user: username, name: "default"});
-		//queryRoom.exec(function(err, docs){
-		//});
+
 	});
 	
 	socket.on('add user', function(data, callback) {
@@ -921,33 +841,8 @@ io.on('connection', function(socket) {
 		//users.splice(users.indexOf(socket.user), 1); //remove 1 user
 		console.log("socket id:" + socket.id);
 		removeRoomSocket(socket.id);
-		
-		//if(socket.handshake.session.auth){
-			//io.emit('usernames', socket.handshake.session.auth['username']);
-			//for(var key in roomSockets){
-			//	if(roomSockets[key].createdByUser == socket.handshake.session.auth['username'] || roomSockets[key].name == socket.handshake.session.auth['username']){
-					//console.log("disconnecting: "+ socket.handshake.session.auth['username']);
-					//removeRoomSocket(socket.handshake.session.auth['username'], socket.handshake.session.auth['remoteuser']);
-			//		for(var i = 0; i < roomSockets[key].sockets.length; i++){
-			//			//roomSockets[key].sockets.splice(i, 1);
-			//		}
-			//		//notify connected clients of all remaining room users
-			//		var socketUsers = [];
-			//		for(var i = 0; i < roomSockets[key].sockets.length; i++){
-			//			socketUsers.push(roomSockets[key].sockets[i].socketUser);
-			//		}
-			//		io.emit('usernames', socketUsers);
-			//		break;
-			//	}
-			//}
-		//}
 	});
 });
-
-
-//app.get('/', function(req, res){
-//	res.send('working');
-//});
 
 //app.listen(3000);
 server.listen(3000);
