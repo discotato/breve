@@ -59,7 +59,10 @@ app.use(session);
 //roomSockets['g@g.com'].sockets.push({socketUser:'user', socket:'socketA'});
 //roomSockets['g@g.com'].phoneNumbers.push({user:'acapeg@gmail.com', phone:'17807421221'});
 var roomSockets = {};
-var hostSockets = {};
+//keep track of user settings.
+//userSettings['g@g.com'] = [{offline: 'sms'}]; //sms or voice
+var userSettings = {};
+//var hostSockets = {};
 
 mongoose.connect('mongodb://localhost/breve', {useMongoClient: true}, function(err){
 	if(err){
@@ -90,6 +93,7 @@ var Room = require('./models/room');
 var RemoteUser = require('./models/remoteuser');
 var RoomUser = require('./models/roomuser');
 var SubscribeUser = require('./models/subscribe');
+var UserSetting = require('./models/usersetting');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 //app.use(bodyParser.urlencoded({ extended: false }));
@@ -137,12 +141,46 @@ function getRemoteHost(username, callback){
 	});
 }
 
-function getRoomSocket(username){
+function setUserSetting(username, settingName, settingValue){
+	UserSetting.findOne({user:username, name:settingName}, function(error, result){
+		if(result){
+			result.value = settingValue;
+			result.save(function (err, updatedSetting) {
+				if (err) throw err;
+			});
+		}
+		else{
+			var uSetting = new UserSetting({user:username, name:settingName, value:settingValue});
+			uSetting.save(function(err){
+				if(err) throw err;
+			});
+		}
+	});
+}
+
+function loadUserSettings(username){
+	userSettings[username] = [];
+	var querySetting = UserSetting.find({user:username});
+	querySetting.exec(function(err, docs){
+		if(docs.length > 0){
+			for(var i = 0; i < docs.length; i++){
+				var uSetting = new Object();
+				uSetting.name = docs[i].name;
+				uSetting.value = docs[i].value;
+				userSettings[username].push(uSetting);
+			}
+		}
+	});
+}
+
+function getRoomSocket(createdBy, roomName){
 	for(var key in roomSockets){
 		var room = roomSockets[key];
-		for(var i = 0; i < room.sockets.length; i++){
-			if(room.sockets[i].socketUser == username){
-				return room.sockets[i];
+		if((room.createdByUser == createdBy && room.name == roomName) || (room.createdByUser == roomName && room.name == createdBy)){
+			for(var i = 0; i < room.sockets.length; i++){
+				if(room.sockets[i].socketUser == roomName){
+					return room.sockets[i];
+				}
 			}
 		}
 	}
@@ -151,8 +189,9 @@ function getRoomSocket(username){
 
 function createRoomSocket(createdBy, roomName){
 	var found = false;
+	//createdByUser: 'g@g.com', name:'h@h.com'
 	for(var key in roomSockets){
-		if(roomSockets[key].name == createdBy || roomSockets[key].name == roomName){
+		if((roomSockets[key].createdByUser == createdBy && roomSockets[key].name == roomName) || (roomSockets[key].createdByUser == roomName && roomSockets[key].name == createdBy)){
 			found = true;
 			break;
 		}
@@ -202,16 +241,18 @@ function getPhoneNumber(username){
 	return null;
 }
 
-function removeRoomSocket(username){
+function removeRoomSocket(socketId){
 	for(var key in roomSockets){
-		if(roomSockets[key].createdByUser == username || roomSockets[key].name == username){
+		//if(roomSockets[key].createdByUser == username || roomSockets[key].name == username){
 			for(var i = 0; i < roomSockets[key].sockets.length; i++){
-				if(roomSockets[key].sockets[i].socketUser == username){
+				if(roomSockets[key].sockets[i].socket.id == socketId){
 					roomSockets[key].sockets.splice(i, 1);
+					console.log("removed:" + socketId);
+					console.log(roomSockets[key]);
 				}
 			}
 			break;
-		}
+		//}
 	}
 }
 
@@ -220,7 +261,7 @@ function removeRoomSocket(username){
 //A live room is an ongoing tally of rooms that have users chatting
 function addLiveRoom(createdBy, roomName){
 	createRoomSocket(createdBy, roomName);
-	Room.count({'$or':[{name:createdBy}, {name:roomName}]}, function (err, count){
+	Room.count({'$or':[{'$and':[{createdByUser:createdBy}, {name:roomName}]}, {'$and':[{createdByUser:roomName}, {name:createdBy}]}]}, function (err, count){
 		if(err) throw err;
 		if(count == 0){
 			//room with name matching createdUser or roomName is not found
@@ -376,7 +417,10 @@ app.post('/tel/text', function(req, res){
 	//try{
 		if(req.body['session']['userType'] == "NONE"){
 			if(req.body['session']['parameters']['action'] == 'create'){
-				tropo.call("+" + req.body['session']['parameters']['number'], null, null, null, null, null, "SMS", null, null, null);
+				//tropo.call("+" + req.body['session']['parameters']['number'], null, null, null, null, null, "SMS", null, null, null);
+				
+				tropo.call([req.body['session']['parameters']['number']]);
+				
 				tropo.say(req.body['session']['parameters']['msg']);
 				res.end(TropoJSON(tropo));
 			}
@@ -681,11 +725,13 @@ app.post('/breve/register', function(req, res){
 				};
 				users.createUser(username, p, extras, function (err) {
 					console.log('User created');
+					//create default user settings
+					setUserSetting(username, "offline", "sms");
 					//create a default room
-					var room = new Room({hostUser: username, remoteUser: "", name: "default"});
-					room.save(function(err){
-						if(err) throw err;
-					});
+					//var room = new Room({hostUser: username, remoteUser: "", name: "default"});
+					//room.save(function(err){
+					//	if(err) throw err;
+					//});
 					users.close();
 					res.render('register-result', { email: username });
 					return;
@@ -732,6 +778,7 @@ app.post('/breve/login', function(req, res){
 					req.session.auth['username'] = username;
 					req.session.room['remoteuser'] = "";
 					req.session.room['roomname'] = "";
+					loadUserSettings(username);
 					//If the room was deleted, create one
 					//addHostRoom(username);
 					res.redirect('/breve/remotehost');
@@ -780,13 +827,14 @@ io.on('connection', function(socket) {
 	if(socket.handshake.session.auth){
 		//room name is the hostUser
 		socket.user = socket.handshake.session.auth['username'];
-		hostSockets[socket.handshake.session.auth['username']] = socket;
+		//hostSockets[socket.handshake.session.auth['username']] = socket;
 		//store the socket
 		for(var key in roomSockets){
 			if((roomSockets[key].createdByUser == socket.handshake.session.auth['username'] && roomSockets[key].name == socket.handshake.session.room['remoteuser']) || (roomSockets[key].createdByUser == socket.handshake.session.room['remoteuser'] && roomSockets[key].name == socket.handshake.session.auth['username'])){
 				roomSockets[key].sockets.push({socketUser:socket.handshake.session.auth['username'], socket:socket, socketTime:Date.now()});
 			}
 		}
+		//
 		console.log(roomSockets);
 		//find the room
 		//var queryRoom = Room.find({'$or':[{createdByUser:socket.handshake.session.auth['username']}, {name:socket.handshake.session.auth['username']}]});
@@ -829,7 +877,7 @@ io.on('connection', function(socket) {
 		}
 		
 		//send SMS if remote user is not logged in
-		if(getRoomSocket(socket.handshake.session.room['remoteuser']) == null){
+		if(getRoomSocket(socket.handshake.session.auth['username'], socket.handshake.session.room['remoteuser']) == null){
 			var remoteUserPhone = getPhoneNumber(socket.handshake.session.room['remoteuser']);
 			if(remoteUserPhone != null){
 				sendTropoSMS(data, remoteUserPhone, false);
@@ -851,18 +899,18 @@ io.on('connection', function(socket) {
 	
 	socket.on('add user', function(data, callback) {
 		//users.indexOf(data)
-		if(data in hostSockets){
-			callback(false);
-		}
-		else{
-			callback(true);
+		//if(data in hostSockets){
+		//	callback(false);
+		//}
+		//else{
+		//	callback(true);
 			//you can set data directly on the socket!
 			//socket.user = data;
 			//users.push(socket.user);
-			hostSockets[socket.user] = socket;
+		//	hostSockets[socket.user] = socket;
 			//updateUsers();
 			//io.emit('usernames', hostSockets);
-		}
+		//}
 	});
 	
 	//function updateUsers(){
@@ -871,11 +919,15 @@ io.on('connection', function(socket) {
 	
 	socket.on('disconnect', function() {
 		//users.splice(users.indexOf(socket.user), 1); //remove 1 user
-		if(socket.handshake.session.auth){
+		console.log("socket id:" + socket.id);
+		removeRoomSocket(socket.id);
+		
+		//if(socket.handshake.session.auth){
 			//io.emit('usernames', socket.handshake.session.auth['username']);
 			//for(var key in roomSockets){
 			//	if(roomSockets[key].createdByUser == socket.handshake.session.auth['username'] || roomSockets[key].name == socket.handshake.session.auth['username']){
-			//		console.log("disconnecting: "+ socket.handshake.session.auth['username']);
+					//console.log("disconnecting: "+ socket.handshake.session.auth['username']);
+					//removeRoomSocket(socket.handshake.session.auth['username'], socket.handshake.session.auth['remoteuser']);
 			//		for(var i = 0; i < roomSockets[key].sockets.length; i++){
 			//			//roomSockets[key].sockets.splice(i, 1);
 			//		}
@@ -888,7 +940,7 @@ io.on('connection', function(socket) {
 			//		break;
 			//	}
 			//}
-		}
+		//}
 	});
 });
 
