@@ -60,8 +60,10 @@ app.use(session);
 //roomSockets['g@g.com'].phoneNumbers.push({user:'acapeg@gmail.com', phone:'17807421221'});
 var roomSockets = {};
 //keep track of user settings.
-//userSettings['g@g.com'] = [{offline: 'sms'}]; //sms or voice
+//userSettings['g@g.com'] = [{name:'offline', value:'sms'}]; //sms or voice
 var userSettings = {};
+//offlineSetting['17807887937'] = "sms";
+var offlineSetting = {};
 //var hostSockets = {};
 
 mongoose.connect('mongodb://localhost/breve', {useMongoClient: true}, function(err){
@@ -158,6 +160,7 @@ function setUserSetting(username, settingName, settingValue){
 	});
 }
 
+//userSettings['g@g.com'] = [{name:'offline', value:'sms'}]; //sms or voice
 function loadUserSettings(username){
 	userSettings[username] = [];
 	var querySetting = UserSetting.find({user:username});
@@ -168,9 +171,40 @@ function loadUserSettings(username){
 				uSetting.name = docs[i].name;
 				uSetting.value = docs[i].value;
 				userSettings[username].push(uSetting);
-			}
+				console.log("Loaded: " + uSetting);
+			} 
 		}
 	});
+}
+
+function loadAllUserSettings(){
+	userSettings = {};
+	var querySetting = UserSetting.find({});
+	querySetting.exec(function(err, docs){
+		for(var i = 0; i < docs.length; i++){
+			userSettings[docs[i].user] = [];
+			var uSetting = new Object();
+			uSetting.name = docs[i].name;
+			uSetting.value = docs[i].value;
+			userSettings[docs[i].user].push(uSetting);
+			console.log("pushing:" + uSetting + " to " + docs[i].user);
+		}
+	});
+	for(var i = 0; i < userSettings.length; i++){
+		console.log("xxxxXXXXXX" + userSettings[i]);
+	}
+	//console.log("Loaded: " + userSettings);
+}
+
+function getUserSetting(username, name){
+	var uSettings = userSettings[username];
+	for(var i = 0; i < uSettings.length; i++){
+		var obj = uSettings[i];
+		if(obj.name == name){
+			return obj.value;
+		}
+	}
+	return null;
 }
 
 function getRoomSocket(createdBy, roomName){
@@ -225,6 +259,20 @@ function getPhoneNumbers(username){
 	if(room){
 		console.log("getPhNums" + room.phoneNumbers);
 		return room.phoneNumbers;
+	}
+	return null;
+}
+
+//returns username
+function getSenderPhone(receiverPhone){
+	//roomSockets['g@g.com'] = {createdByUser: 'g@g.com', name:'h@h.com', sockets:[{socketUser:'user', socket:'socketA'}], phoneNumbers:[{user:'acapeg@gmail.com', phone:'17807421221'}]};
+	for(var key in roomSockets){
+		var phoneNums = roomSockets[key].phoneNumbers;
+		for(var i = 0; i < phoneNums.length; i++){
+			if(phoneNums[i].phone == receiverPhone){
+				return phoneNums[i].user;
+			}
+		}
 	}
 	return null;
 }
@@ -386,7 +434,7 @@ app.post('/tel/voice', function(req, res){
         res.send(TropoJSON(tropo));
     }
 	else{
-		tropo.say("Hello! You have reached Raspberry Minit. A reliable source for Japanese watches.");
+		tropo.say("Hello! You have reached our automated voice system!");
 		var say = new Say("Please ree cord your message after the beep and do not hang up until further instructions.");
 		var choices = new Choices(null, null, "#");
 		tropo.record(3, false, true, true, choices, 'audio/wav', 3, 60, null, null, "recording", null, say, 5, null, "https://breve.me/tel/voice/rec?callerid=" + req.body['session']['from']['id'], null, null);
@@ -404,13 +452,18 @@ app.post('/tel/text', function(req, res){
 	var tropo = new tropowebapi.TropoWebAPI();
 	console.log(res.statusCode);
 	console.log(req.body);
+	//loadAllUserSettings();
 	//try{
 		if(req.body['session']['userType'] == "NONE"){
 			if(req.body['session']['parameters']['action'] == 'create'){
-				//tropo.call("+" + req.body['session']['parameters']['number'], null, null, null, null, null, "SMS", null, null, null);
-				
-				tropo.call([req.body['session']['parameters']['number']]);
-				
+				var medium = offlineSetting[req.body['session']['parameters']['number']];
+				console.log("medium: " + medium);
+				if(medium == "sms"){
+					tropo.call("+" + req.body['session']['parameters']['number'], null, null, null, null, null, "SMS", null, null, null);
+				}
+				else if(medium == "voice"){
+					tropo.call([req.body['session']['parameters']['number']]);
+				}
 				tropo.say(req.body['session']['parameters']['msg']);
 				res.end(TropoJSON(tropo));
 			}
@@ -714,7 +767,8 @@ app.post('/breve/login', function(req, res){
 					req.session.auth['username'] = username;
 					req.session.room['remoteuser'] = "";
 					req.session.room['roomname'] = "";
-					loadUserSettings(username);
+					//loadUserSettings(username);
+					//loadAllUserSettings();
 					res.redirect('/breve/remotehost');
 				}
 				users.close();
@@ -791,7 +845,7 @@ io.on('connection', function(socket) {
 		}
 
 		console.log(roomSockets);
-		saveRoomMessage(socket.handshake.session.auth['username'], socket.handshake.session.room['remoteuser'], data);
+		saveRoomMessage(socket.handshake.session.auth['username'], socket.handshake.session.room['remoteuser'], data.msg);
 		var sockets = null;
 		for(var key in roomSockets){
 			if((roomSockets[key].createdByUser == socket.handshake.session.auth['username'] && roomSockets[key].name == socket.handshake.session.room['remoteuser']) || (roomSockets[key].createdByUser == socket.handshake.session.room['remoteuser'] && roomSockets[key].name == socket.handshake.session.auth['username'])){
@@ -803,18 +857,30 @@ io.on('connection', function(socket) {
 		//send SMS if remote user is not logged in
 		if(getRoomSocket(socket.handshake.session.auth['username'], socket.handshake.session.room['remoteuser']) == null){
 			var remoteUserPhone = getPhoneNumber(socket.handshake.session.room['remoteuser']);
+			offlineSetting[remoteUserPhone] = data.offline;
 			if(remoteUserPhone != null){
-				sendTropoSMS(data, remoteUserPhone, false);
+				sendTropoSMS(data.msg, remoteUserPhone, false);
 			}
 		}
 
 		if(sockets != null){
 			for(var i = 0; i < sockets.length; i++){
 				//console.log("sending" + sockets[i]);
-				sockets[i].socket.emit('chat message', {message: data, user: username});
+				sockets[i].socket.emit('chat message', {message: data.msg, user: username});
 			}
 		}
 
+	});
+	
+	socket.on('username', function(data, callback) {
+		socket.emit('username', {user: socket.handshake.session.auth['username']});
+	});
+	
+	//data = { user: 'matcha@gmail.com', name: 'offline', value: 'voice' }
+	socket.on('user setting', function(data, callback) {
+		var uSetting = data;
+		console.log(uSetting);
+		setUserSetting(uSetting.user, uSetting.name, uSetting.value);
 	});
 	
 	socket.on('add user', function(data, callback) {

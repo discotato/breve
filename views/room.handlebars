@@ -7,7 +7,7 @@
 		<div class="col-md-12">
 			<form method="post" action="./room">
 			<div class="form-group"><div class="col-sm-12"><div class="input-group"><label for="email">User Email</label><input type="text" id="email" name="email" label="User Email" value="{{ email }}" /></div></div></div>
-			<div class="form-group"><div class="col-sm-12"><input type="submit" class="wavesbutton" value="Start Chat" /></div></div>
+			<div class="form-group"><div class="col-sm-12"><!--<input type="submit" class="wavesbutton" value="Start Chat" />--><button class="btn waves-effect waves-light" type="submit" name="action">Start Chat</button></div></div>
 			<!-- <div class="form-group"><div class="col-sm-12"><a href="#" class="wavesbutton">Click Here</a></div></div> -->
 			</form>
 			<div class="col-sm-12"><div class="text-danger validation-summary-errors">{{ emailMessage }}</div></div>

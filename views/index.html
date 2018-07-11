@@ -11,7 +11,6 @@
 <!-- <link rel="import" href="/breve/elements/login-view.html"> -->
 <link rel="stylesheet" type="text/css" href="/breve/static/jquery-easy-loading/dist/jquery.loading.css" />
 
-<!-- <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script> -->
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
 <link rel="stylesheet" type="text/css" href="/breve/bower_components/Waves/dist/waves.min.css" />
 <link rel="stylesheet" type="text/css" href="/breve/static/polymerform/build/jquery.polymer-form.min.css" />
@@ -20,14 +19,13 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.15/jquery.mask.min.js"></script>
 
-<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.15/jquery.mask.min.js"></script> -->
 <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.1/socket.io.js"></script>
 
-<!-- Latest compiled and minified CSS -->
-<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"> -->
-<!-- Latest compiled and minified JavaScript -->
-<!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script> -->
+<!-- materializecss.com -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
 
 <script>
 
@@ -36,16 +34,30 @@ var loggedInUser = "default";
 var friends = [];
 
 $(function () {
+	$('.tooltipped').tooltip();
+	$( ".target" ).change(function() {
+        if( $(this).is(":checked") ){ // check if the radio is checked
+            var val = $(this).val(); // retrieve the value
+			$('#offline').val(val); // set hidden field
+			//set offline setting
+			var userSetting = {user:$('#user').val(), name:'offline', value:val};
+			rooms[loggedInUser].emit('user setting', userSetting, function(){
+			});
+        }
+	});
+
 	function scrollMessage(){
 		$('#messagewindow').animate({scrollTop: $('#messagewindow')[0].scrollHeight}, 2000);
 	}
 
 	function waitStart(){
-		$("#wait").css("display", "block");
+		//$("#wait").css("display", "block");
+		$(".progress").css("display", "block");
 	}
 	
 	function waitEnd(){
-		$("#wait").css("display", "none");
+		//$("#wait").css("display", "none");
+		$(".progress").css("display", "none");
 	}
 
 	var socket = io();
@@ -55,10 +67,18 @@ $(function () {
 	//check for friends from session
 	friends = [{user:"user1@gmail.com"},{user:"user2@gmail.com"}];
 	
+	//get the logged in username
+	rooms[loggedInUser].emit('username', "", function(){
+	});
+	
+
+	
 	$('#sendmessage').submit(function(e){
 		e.preventDefault();
 		if($('#m').val().trim().length > 0){
-			rooms[loggedInUser].emit('chat message', $('#m').val(), function(){
+			//rooms[loggedInUser].emit('chat message', $('#m').val(), function(){
+			var msg = {user:$('#user').val(), msg:$('#m').val(), offline:$('#offline').val()};
+			rooms[loggedInUser].emit('chat message', msg, function(){
 				var i = 0;
 			});
 		}
@@ -127,6 +147,11 @@ $(function () {
 		{
 			$('#room-members').append($('<li>').text(data[i]));
 		}
+	});
+	
+	socket.on('username', function(data){
+		//current logged in user
+		$('#user').val(data.user);
 	});
 	
 	socket.on('chat message', function(msg){
@@ -200,11 +225,35 @@ $(function () {
 	<div class="row">
 		<div class="col-md-12">
 			<div id="chatwindow">
-				<div id="wait" class="loading-overlay-content loading-overlay"><br>Loading Messages..</div>
+				<!-- <div id="wait" class="loading-overlay-content loading-overlay"><br>Loading Messages..</div> -->
+				<div class="progress">
+					<div class="indeterminate"></div>
+				</div>
 				<div id="messagewindow">
 				</div>
 				<div id="inputcontainer">
-					<p><form id="sendmessage" action=""><input id="m" type="text" autocomplete="off" /><button class="wavesbutton">Send</button></form></p>
+					<p>
+						<form id="sendmessage" action=""><input id="m" type="text" autocomplete="off" />
+							<input type="hidden" id="user" name="username" value="">
+							<input type="hidden" id="offline" name="offlinesetting" value="sms">
+							<button class="btn waves-effect waves-light" type="submit" name="action">Send<i class="material-icons right">send</i></button>
+							<!-- <button class="wavesbutton">Send</button> -->
+							<br>
+							<br>
+							<p>
+								<label>
+								<input class="target" name="offline" value="sms" type="radio" checked />
+								<span class="tooltipped" data-position="right" data-tooltip="Send an SMS Text if recipient is offline">Text</span>
+								</label>
+							</p>
+							<p>
+								<label>
+								<input class="target" name="offline" value="voice" type="radio" />
+								<span class="tooltipped" data-position="right" data-tooltip="Phone if recipient is offline">Voice</span>
+								</label>
+							</p>
+						</form>
+					</p>
 				</div>
 			</div>
 		</div>
