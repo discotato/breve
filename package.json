@@ -12,6 +12,7 @@
   "dependencies": {
     "body-parser": "^1.18.3",
     "chai": "^3.5.0",
+    "cookie-session": "^2.0.0-beta.3",
     "email-validator": "^2.0.4",
     "express": "^4.16.3",
     "express-handlebars": "^3.0.0",
@@ -21,6 +22,7 @@
     "gulp-autoprefixer": "^2.3.1",
     "gulp-minify-css": "^1.2.1",
     "gulp-sass": "^4.0.1",
+    "helmet": "^3.12.1",
     "http-request": "^0.7.0",
     "http.min": "^1.3.2",
     "jade": "^1.11.0",

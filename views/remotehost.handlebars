@@ -8,10 +8,12 @@
 			{{#each hosts}}
 				<form method="post" action="./remotehost">
 				<input type="hidden" name="remoteHost" value="{{remoteUser}}">
-				<p><!--<div class="col-sm-12">--><button class="btn waves-effect waves-light" type="submit" name="action">{{ remoteUser }}<i class="material-icons right">account_box</i></button><!--</div>--></p>
+				<p><!--<div class="col-sm-12">--><button class="btn waves-effect waves-light" type="submit" name="action">{{ remoteUser }}<i class="material-icons right">account_box</i></button><!--</div>-->
+				</p>
 				</form>
 			{{/each}}
 		</div>
+		<div class="col-sm-12"><div class="text-danger validation-summary-errors">{{ hostMessage }}</div></div>
 		<div class="col-md-12">
 			<h1>Or <a href="./room">Add</a> Someone</h1>
 		</div>

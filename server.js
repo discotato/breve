@@ -8,6 +8,7 @@ var usermanage = require('user-management');
 var validator = require('email-validator');
 var nodemailer = require('nodemailer');
 var httpMin = require('http.min')
+var helmet = require('helmet')
 
 var tropoApi = "api.tropo.com";
 var tropoApiVer = "1.0";
@@ -53,6 +54,9 @@ var sharedsession = require("express-socket.io-session");
 
 //attach session
 app.use(session);
+
+//for security
+app.use(helmet());
 
 //keep track of rooms and phone pairs.
 //roomSockets['g@g.com'] = {createdByUser: 'g@g.com', name:'h@h.com', sockets:[{socketUser:'user', socket:'socketA'}], phoneNumbers:[{user:'acapeg@gmail.com', phone:'17807421221'}]};
@@ -302,6 +306,30 @@ function removeRoomSocket(socketId){
 	}
 }
 
+function getSocketByUser(userId){
+	for(var key in roomSockets){
+		for(var i = 0; i < roomSockets[key].sockets.length; i++){
+			if(roomSockets[key].sockets[i].socket.user == userId){
+				console.log("found user:" + roomSockets[key].sockets[i].socket.user);
+				return roomSockets[key].sockets[i];
+			}
+		}
+	}
+	return null;
+}
+
+function getSocketByRemoteUser(remoteUser){
+	for(var key in roomSockets){
+		for(var i = 0; i < roomSockets[key].sockets.length; i++){
+			if(roomSockets[key].sockets[i].socket.remoteuser == remoteUser){
+				console.log("found remote user:" + roomSockets[key].sockets[i].socket.remoteuser);
+				return roomSockets[key].sockets[i];
+			}
+		}
+	}
+	return null;
+}
+
 //Keep a record of live rooms. See model for a description.
 //roomName is the email of the remote user.
 //A live room is an ongoing tally of rooms that have users chatting
@@ -536,8 +564,8 @@ app.get('/subscribe/success', function(req, res){
 });
 
 app.post('/subscribe/new', function(req, res){
-	var user = req.body.email;
-	var resource = req.body.resource;
+	var user = ((req.body.email) ? req.body.email.trim().toLowerCase() : "");
+	var resource = ((req.body.resource) ? req.body.resource : "");
 	if(!validator.validate(user)){
 		var emailMsg = "This is not a valid email address.";
 		res.render('subscribe', { websiteName: "Traderbate", emailMessage: emailMsg, email: user});
@@ -582,7 +610,7 @@ app.get('/breve/room', function(req, res){
 app.post('/breve/room', function(req, res){
 	//authenticate in separate function
 	var users = new usermanage();
-	var username = req.body.email.trim();
+	var username = ((req.body.email) ? req.body.email.trim().toLowerCase() : "");
 	if(username == req.session.auth['username']){
 		res.render('room', { userStatus: "You cannot chat with yourself. Please enter an email of your friend.", email: username });
 		return;
@@ -604,11 +632,14 @@ app.post('/breve/room', function(req, res){
 					//add the host to the room
 					addUserToRoom(req.session.auth['username'], req.session.auth['username']);
 					//create a record of the live rooms
-					addLiveRoom(req.session.auth['username'], username);
-					
+					addLiveRoom(req.session.auth['username'], username);	
 					users.close();
-					res.redirect('/');
-					//res.redirect('/breve/room');
+					if((getSocketByUser(username) || getSocketByRemoteUser(username)) && (!getSocketByUser(req.session.auth['username']))){
+						res.redirect('/breve/remotehost?hostMessage=Sorry! The user is busy. Please wait until they disconnect.');
+					}
+					else{
+						res.redirect('/');
+					}
 				}
 				else {
 					console.log("remote user does not exists:" + username);
@@ -629,7 +660,11 @@ app.get('/breve/remotehost', function(req, res){
 		queryRemoteUser.exec(function(err, docs){
 			if(docs.length > 0){
 				console.log("remotehost" + docs[0]);
-				res.render('remotehost', {hosts: docs, remoteUser: docs[0].remoteUser});
+				var msg = "";
+				if(Object.keys(req.query).length != 0){
+					msg = req.query.hostMessage;
+				}
+				res.render('remotehost', {hosts: docs, remoteUser: docs[0].remoteUser, hostMessage: msg });
 			}
 			else{
 				res.redirect('/breve/room');
@@ -644,15 +679,21 @@ app.get('/breve/remotehost', function(req, res){
 //add remote user to buddy list
 app.post('/breve/remotehost', function(req, res){
 	if(req.session.auth){
-		req.session.room['remoteuser'] = req.body.remoteHost;
-		//add the remote user to room
-		addUserToRoom(req.session.auth['username'], req.body.remoteHost);
-		//add the host to the room
-		addUserToRoom(req.session.auth['username'], req.session.auth['username']);
-		//create a record of the live rooms
-		addLiveRoom(req.session.auth['username'], req.body.remoteHost);
-		
-		res.redirect('/');
+		//check if line is busy
+		var remoteHost = ((req.body.remoteHost) ? req.body.remoteHost : "");
+		if((getSocketByUser(remoteHost) || getSocketByRemoteUser(remoteHost)) && (!getSocketByUser(req.session.auth['username']))){
+			res.redirect('/breve/remotehost?hostMessage=Sorry! The user is busy. Please wait until they disconnect.');
+		}
+		else{
+			req.session.room['remoteuser'] = remoteHost;
+			//add the remote user to room
+			addUserToRoom(req.session.auth['username'], remoteHost);
+			//add the host to the room
+			addUserToRoom(req.session.auth['username'], req.session.auth['username']);
+			//create a record of the live rooms
+			addLiveRoom(req.session.auth['username'], remoteHost);
+			res.redirect('/');
+		}
 	}
 	else{
 		req.session.room['remoteuser'] = "";
@@ -665,10 +706,10 @@ app.get('/breve/register', function(req, res){
 });
 
 app.post('/breve/register', function(req, res){
-	var username = req.body.email.trim().toLowerCase();
-	var ph = req.body.phone.trim();
-	var p = req.body.password;
-	var p1 = req.body.password1;
+	var username = ((req.body.email) ? req.body.email.trim().toLowerCase() : "");
+	var ph = ((req.body.phone) ? req.body.phone.trim() : "");
+	var p = ((req.body.password) ? req.body.password : "");
+	var p1 = ((req.body.password1) ? req.body.password1 : "");
 	
 	var validEmail = true;
 	var validPassword = true;
@@ -718,7 +759,8 @@ app.post('/breve/register', function(req, res){
 				var extras = {
 					handle: handleTemp[0],
 					phone: ph,
-					phone1: cleanPhone(ph)
+					phone1: cleanPhone(ph),
+					apps: [{app:'breve'}]
 				};
 				users.createUser(username, p, extras, function (err) {
 					console.log('User created');
@@ -738,8 +780,8 @@ app.get('/breve/login', function(req, res){
 });
 
 app.post('/breve/login', function(req, res){
-	var username = req.body.email.trim();
-	var p = req.body.password;
+	var username = ((req.body.email) ? req.body.email.trim().toLowerCase() : "");
+	var p = ((req.body.password) ? req.body.password : "");
 	if(username.length > 0 && p.length > 0){
 		var users = new usermanage({ tokenExpiration: 8064 }); //1 year hours (eg. 1 week is 168 hours)
 		users.load(function(err) {
@@ -766,9 +808,6 @@ app.post('/breve/login', function(req, res){
 					req.session.auth['token'] = result.token;
 					req.session.auth['username'] = username;
 					req.session.room['remoteuser'] = "";
-					req.session.room['roomname'] = "";
-					//loadUserSettings(username);
-					//loadAllUserSettings();
 					res.redirect('/breve/remotehost');
 				}
 				users.close();
@@ -815,14 +854,13 @@ io.on('connection', function(socket) {
 	if(socket.handshake.session.auth){
 		//room name is the hostUser
 		socket.user = socket.handshake.session.auth['username'];
-		//hostSockets[socket.handshake.session.auth['username']] = socket;
+		socket.remoteuser = socket.handshake.session.room['remoteuser'];
 		//store the socket
 		for(var key in roomSockets){
 			if((roomSockets[key].createdByUser == socket.handshake.session.auth['username'] && roomSockets[key].name == socket.handshake.session.room['remoteuser']) || (roomSockets[key].createdByUser == socket.handshake.session.room['remoteuser'] && roomSockets[key].name == socket.handshake.session.auth['username'])){
 				roomSockets[key].sockets.push({socketUser:socket.handshake.session.auth['username'], socket:socket, socketTime:Date.now()});
 			}
 		}
-		//
 		console.log(roomSockets);
 		//{'$or':[{'room.name' : socket.handshake.session.auth['username']}, {'room.createdByUser' : socket.handshake.session.auth['username']}]}
 		//db.messages.find({'$or':[{"room.name" : "g@g.com"}, {"room.createdByUser" : "g@g.com"}]})
